@@ -1,5 +1,5 @@
 {
- "generated": "2026-08-11T12:20:07+00:00",
+ "generated": "2026-08-11T12:28:28+00:00",
  "trip": {
   "start": "2026-08-13",
   "end": "2026-08-16"
@@ -227,7 +227,7 @@
    "type": "Lunch",
    "notes": "",
    "town": "",
-   "wx": "cortland",
+   "wx": "ithaca",
    "link": "",
    "hasPrivate": false
   },
@@ -251,13 +251,13 @@
    "daily": [
     {
      "name": "Today",
-     "start": "2026-08-11T06:00:00-04:00",
+     "start": "2026-08-11T08:00:00-04:00",
      "day": true,
      "temp": 78,
-     "pop": 7,
-     "wind": "1 to 7 mph",
-     "short": "Areas Of Fog then Partly Sunny",
-     "detail": "Areas of fog before 10am. Partly sunny, with a high near 78. Northwest wind 1 to 7 mph.",
+     "pop": 3,
+     "wind": "3 to 7 mph",
+     "short": "Patchy Fog then Partly Sunny",
+     "detail": "Patchy fog before 10am. Partly sunny, with a high near 78. Northwest wind 3 to 7 mph.",
      "icon": "https://api.weather.gov/icons/land/day/fog/bkn?size=medium"
     },
     {
@@ -405,12 +405,6 @@
     }
    ],
    "hourly": [
-    {
-     "start": "2026-08-11T07:00:00-04:00",
-     "temp": 64,
-     "pop": 6,
-     "short": "Areas Of Fog"
-    },
     {
      "start": "2026-08-11T08:00:00-04:00",
      "temp": 65,
@@ -1088,6 +1082,12 @@
      "temp": 73,
      "pop": 27,
      "short": "Chance Rain Showers"
+    },
+    {
+     "start": "2026-08-17T19:00:00-04:00",
+     "temp": 71,
+     "pop": 27,
+     "short": "Chance Rain Showers"
     }
    ]
   },
@@ -1096,13 +1096,13 @@
    "daily": [
     {
      "name": "Today",
-     "start": "2026-08-11T06:00:00-04:00",
+     "start": "2026-08-11T08:00:00-04:00",
      "day": true,
      "temp": 82,
      "pop": 12,
-     "wind": "0 to 6 mph",
+     "wind": "6 mph",
      "short": "Patchy Fog then Mostly Sunny",
-     "detail": "Patchy fog between 7am and 10am. Mostly sunny, with a high near 82. Northwest wind 0 to 6 mph.",
+     "detail": "Patchy fog before 10am. Mostly sunny, with a high near 82. Northwest wind around 6 mph.",
      "icon": "https://api.weather.gov/icons/land/day/fog/sct?size=medium"
     },
     {
@@ -2786,13 +2786,13 @@
    "daily": [
     {
      "name": "Today",
-     "start": "2026-08-11T07:00:00-04:00",
+     "start": "2026-08-11T08:00:00-04:00",
      "day": true,
      "temp": 82,
      "pop": 23,
-     "wind": "1 to 6 mph",
+     "wind": "2 to 6 mph",
      "short": "Slight Chance Rain Showers",
-     "detail": "Patchy fog before 9am, then a slight chance of rain showers between 10am and 2pm. Partly sunny, with a high near 82. Northwest wind 1 to 6 mph. Chance of precipitation is 20%.",
+     "detail": "Patchy fog before 9am, then a slight chance of rain showers between 10am and 2pm. Partly sunny, with a high near 82. Northwest wind 2 to 6 mph. Chance of precipitation is 20%.",
      "icon": "https://api.weather.gov/icons/land/day/rain_showers,20?size=medium"
     },
     {
@@ -2940,12 +2940,6 @@
     }
    ],
    "hourly": [
-    {
-     "start": "2026-08-11T07:00:00-04:00",
-     "temp": 67,
-     "pop": 3,
-     "short": "Patchy Fog"
-    },
     {
      "start": "2026-08-11T08:00:00-04:00",
      "temp": 69,
@@ -3621,6 +3615,12 @@
     {
      "start": "2026-08-17T18:00:00-04:00",
      "temp": 77,
+     "pop": 24,
+     "short": "Slight Chance Rain Showers"
+    },
+    {
+     "start": "2026-08-17T19:00:00-04:00",
+     "temp": 75,
      "pop": 24,
      "short": "Slight Chance Rain Showers"
     }
