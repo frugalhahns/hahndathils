@@ -1,5 +1,5 @@
 {
- "generated": "2026-08-11T12:28:28+00:00",
+ "generated": "2026-08-11T12:31:12+00:00",
  "trip": {
   "start": "2026-08-13",
   "end": "2026-08-16"
@@ -1096,13 +1096,13 @@
    "daily": [
     {
      "name": "Today",
-     "start": "2026-08-11T08:00:00-04:00",
+     "start": "2026-08-11T07:00:00-04:00",
      "day": true,
      "temp": 82,
      "pop": 12,
-     "wind": "6 mph",
+     "wind": "1 to 6 mph",
      "short": "Patchy Fog then Mostly Sunny",
-     "detail": "Patchy fog before 10am. Mostly sunny, with a high near 82. Northwest wind around 6 mph.",
+     "detail": "Patchy fog before 10am. Mostly sunny, with a high near 82. Northwest wind 1 to 6 mph.",
      "icon": "https://api.weather.gov/icons/land/day/fog/sct?size=medium"
     },
     {
