@@ -14,6 +14,10 @@
 
 * { box-sizing: border-box; }
 
+/* Author `display` rules beat the UA stylesheet, so [hidden] needs to win back.
+   Without this the lightbox's `display: flex` keeps it on screen at load. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
