@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161b">
+<meta name="robots" content="noindex, nofollow">
+<title>Hahndathils · Ithaca &amp; Cortland</title>
+<link rel="preconnect" href="https://api.github.com">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Ithaca &amp; Cortland, New York</p>
+    <h1>Hahndathils</h1>
+    <p id="countdown" class="countdown">…</p>
+    <button id="unlock" class="unlock" hidden>🔒 Unlock addresses</button>
+  </div>
+</header>
+
+<nav id="daynav" class="daynav"><div class="wrap" id="daynav-inner"></div></nav>
+
+<main class="wrap">
+
+  <section id="now" class="card now" hidden></section>
+
+  <section id="itinerary" class="section">
+    <h2>Itinerary</h2>
+    <div id="days"></div>
+  </section>
+
+  <section id="forecast" class="section">
+    <h2>7-day forecast</h2>
+    <div class="loc-tabs" id="loc-tabs"></div>
+    <div id="forecast-body"></div>
+  </section>
+
+  <section id="ideas" class="section">
+    <h2>If you want to add something</h2>
+    <div class="chips">
+      <button class="chip is-on" data-filter="all">Everything</button>
+      <button class="chip" data-filter="outdoor">Outdoor</button>
+      <button class="chip" data-filter="indoor">Rain plan</button>
+    </div>
+    <div id="ideas-body" class="grid"></div>
+    <div id="events-body"></div>
+    <div id="links-body" class="links"></div>
+  </section>
+
+  <section id="photos" class="section">
+    <h2>Photos</h2>
+    <p class="muted" id="photos-hint">Loading…</p>
+    <div id="photos-body" class="gallery"></div>
+  </section>
+
+</main>
+
+<footer class="wrap foot">
+  <p id="generated" class="muted"></p>
+  <p class="muted">Weather from the National Weather Service. Itinerary from the family spreadsheet.</p>
+</footer>
+
+<dialog id="pass-dialog" class="dialog">
+  <form method="dialog" id="pass-form">
+    <h3>Unlock addresses</h3>
+    <p class="muted">Street addresses are encrypted. Ask in the group chat for the passphrase.</p>
+    <input type="password" id="pass-input" placeholder="passphrase" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <p id="pass-error" class="error" hidden>Wrong passphrase.</p>
+    <menu>
+      <button value="cancel" type="submit" class="btn-ghost">Cancel</button>
+      <button value="ok" id="pass-ok" type="submit" class="btn">Unlock</button>
+    </menu>
+  </form>
+</dialog>
+
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-close" aria-label="Close">✕</button>
+  <img id="lb-img" alt="">
+</div>
+
+<script src="assets/app.js" type="module"></script>
+</body>
+</html>

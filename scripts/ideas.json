@@ -1,0 +1,23 @@
+[
+  { "name": "Taughannock Falls State Park", "blurb": "215ft plunge, taller than Niagara. Flat 0.75mi gorge trail to the base.", "town": "Trumansburg", "indoor": false, "drive": "30 min from Ithaca", "url": "https://parks.ny.gov/parks/62/" },
+  { "name": "Robert H. Treman State Park", "blurb": "Swim at the base of Lower Falls. Gorge trail passes 12 waterfalls.", "town": "Ithaca", "indoor": false, "drive": "15 min from Ithaca", "url": "https://parks.ny.gov/parks/135/" },
+  { "name": "Watkins Glen State Park", "blurb": "19 waterfalls in 2 miles of stone stairs and tunnels. The famous one.", "town": "Watkins Glen", "indoor": false, "drive": "45 min from Ithaca", "url": "https://parks.ny.gov/parks/142/" },
+  { "name": "Cascadilla Gorge Trail", "blurb": "Six waterfalls climbing from downtown Ithaca up to Cornell. Short and steep.", "town": "Ithaca", "indoor": false, "drive": "in town", "url": "https://cornellbotanicgardens.org/our-gardens/natural-areas/cascadilla-gorge/" },
+  { "name": "Ithaca Farmers Market", "blurb": "Waterfront pavilion at Steamboat Landing. Sat 9-3, Sun 10-3. Food stalls, not just produce.", "town": "Ithaca", "indoor": false, "drive": "in town", "url": "https://ithacamarket.com/" },
+  { "name": "Cornell Botanic Gardens", "blurb": "Free. Herb garden, arboretum, and the Slim Jim Woods trails.", "town": "Ithaca", "indoor": false, "drive": "in town", "url": "https://cornellbotanicgardens.org/" },
+  { "name": "Stewart Park", "blurb": "Cayuga Lake shoreline, carousel, big shade trees. Easy with no plan.", "town": "Ithaca", "indoor": false, "drive": "in town", "url": "https://www.cityofithaca.org/234/Stewart-Park" },
+  { "name": "Lime Hollow Nature Center", "blurb": "Boardwalks, bog, treehouse. Closest real nature to the Airbnb.", "town": "Cortland", "indoor": false, "drive": "10 min from Cortland", "url": "https://limehollow.org/" },
+  { "name": "Greek Peak Mountain Coaster", "blurb": "Alpine coaster you control. Also a zipline and adventure center.", "town": "Cortland", "indoor": false, "drive": "15 min from Cortland", "url": "https://www.greekpeak.net/" },
+  { "name": "Cayuga Lake Wine Trail", "blurb": "Tasting rooms up both shores. Sheldrake Point and Six Mile Creek are the easy picks.", "town": "Cayuga Lake", "indoor": false, "drive": "20-50 min", "url": "https://cayugawinetrail.com/" },
+  { "name": "Buttermilk Falls State Park", "blurb": "Swimming hole at the base plus the gorge climb. Already on the itinerary Friday.", "town": "Ithaca", "indoor": false, "drive": "35 min from Airbnb", "url": "https://parks.ny.gov/parks/151/" },
+
+  { "name": "Cornell Lab of Ornithology", "blurb": "Free. Bird cams, sound library, 4 miles of Sapsucker Woods trail outside.", "town": "Ithaca", "indoor": true, "drive": "25 min from Cortland", "url": "https://www.birds.cornell.edu/home/visit/" },
+  { "name": "Museum of the Earth", "blurb": "Full mastodon and a right whale skeleton. Good rain plan, about 2 hours.", "town": "Ithaca", "indoor": true, "drive": "30 min from Cortland", "url": "https://www.museumoftheearth.org/" },
+  { "name": "Herbert F. Johnson Museum of Art", "blurb": "Free. I.M. Pei building, and the 5th floor has the best view of Cayuga Lake.", "town": "Ithaca", "indoor": true, "drive": "in Cornell campus", "url": "https://museum.cornell.edu/" },
+  { "name": "Sciencenter", "blurb": "Hands-on science museum. Built for kids but the outdoor mini golf is fun regardless.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.sciencenter.org/" },
+  { "name": "Center Ithaca / Ithaca Commons", "blurb": "Food court with the soup dumplings, plus the pedestrian mall shops.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.downtownithaca.com/" },
+  { "name": "Cortland Beer Company", "blurb": "Small taproom downtown Cortland. Closest good beer to the Airbnb.", "town": "Cortland", "indoor": true, "drive": "5 min from Airbnb", "url": "https://www.cortlandbeer.com/" },
+  { "name": "Purity Ice Cream", "blurb": "Ithaca institution since 1936. The other dairy option if the Cornell line is long.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.purityicecream.com/" },
+  { "name": "1890 House Museum", "blurb": "Chateau-style mansion with a tower you can climb. Right in Cortland.", "town": "Cortland", "indoor": true, "drive": "5 min from Airbnb", "url": "https://www.the1890house.org/" },
+  { "name": "Cortland Repertory Theatre", "blurb": "Summer stock at the Pavilion in Little York Lake. Check what is running.", "town": "Cortland", "indoor": true, "drive": "15 min from Airbnb", "url": "https://www.cortlandrep.org/" }
+]

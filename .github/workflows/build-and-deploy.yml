@@ -1,0 +1,68 @@
+name: build and deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 11:00 UTC = 7am Eastern. GitHub's scheduler drifts by 5-30 min on free runners.
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Never let a scheduled run and a photo upload deploy over each other.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet cryptography Pillow pillow-heif
+
+      - name: Normalize uploaded photos
+        run: python scripts/process_photos.py
+
+      - name: Refresh itinerary, weather, and events
+        env:
+          TRIP_PASSPHRASE: ${{ secrets.TRIP_PASSPHRASE }}
+          TICKETMASTER_KEY: ${{ secrets.TICKETMASTER_KEY }}
+        run: python scripts/build.py
+
+      - name: Commit regenerated files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data photos
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+          else
+            git commit -m "chore: refresh trip data and photos"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
