@@ -1,0 +1,89 @@
+/* Theme: field guide.
+   Cream paper, contour lines, serif display, oxblood plate numbers. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Spectral:ital,wght@0,300;0,400;0,600;1,400&display=swap");
+
+:root {
+  --bg: #FBF7EF;
+  --bg-2: #F3EDE0;
+  --card: #FBF7EF;
+  --line: #DCD3C0;
+  --ink: #221D16;
+  --ink-2: #6E6455;
+  --accent: #7A2E2E;
+  --accent-2: #8A6A2F;
+  --rain: #3B5E72;
+
+  --hero-bg: transparent;
+  --gate-bg: #FBF7EF;
+  --nav-bg: rgba(251, 247, 239, .95);
+  --overlay: rgba(30, 26, 20, .95);
+
+  /* Faint contour lines across the page. */
+  --texture: repeating-linear-gradient(
+    102deg,
+    transparent 0 38px,
+    rgba(122, 46, 46, .035) 38px 39px
+  );
+
+  --font-body: "Spectral", Georgia, serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-label: "Spectral", Georgia, serif;
+  --label-caps: uppercase;
+  --label-tracking: .14em;
+
+  --radius: 0;
+  --radius-pill: 0;
+  --card-border: 0;
+  --title-weight: 600;
+  --title-tracking: -.01em;
+  --wrap: 760px;
+}
+
+/* No cards anywhere. Rules and whitespace only. */
+.card, .idea { background: transparent; border: 0; padding: 0; }
+.idea { border-top: 1px solid var(--line); padding-top: 12px; }
+.grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+
+.hero { border-bottom: 2px solid var(--ink); padding: 54px 0 22px; }
+.hero h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); font-style: normal; }
+.kicker { color: var(--ink-2); letter-spacing: .2em; font-size: .68rem; }
+.countdown { font-style: italic; color: var(--ink-2); }
+.unlock { border: 1px solid var(--ink); color: var(--ink); border-radius: 0; }
+
+.gate-box h1 { font-size: clamp(2.2rem, 10vw, 3rem); }
+.gate-box input {
+  background: transparent; border: 0; border-bottom: 1.5px solid var(--ink);
+  border-radius: 0; padding: 10px 2px; font-size: 1.05rem;
+}
+.gate-box input:focus { border-bottom-color: var(--accent); }
+.btn { background: var(--ink); color: var(--bg); border-radius: 0; }
+
+.daynav { border-bottom: 1px solid var(--line); }
+.daynav a { border-radius: 0; text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; }
+.daynav a.is-today { background: transparent; color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+/* Day headings read as numbered plates. */
+.day-head { border-bottom: 1px solid var(--ink); align-items: baseline; }
+.day-head h3 { font-size: 1.35rem; }
+.day-head .tag { border: 0; color: var(--accent); font-style: italic; text-transform: none; letter-spacing: 0; }
+
+.stop { border-bottom: 1px solid var(--line); grid-template-columns: 68px 1fr; }
+.stop-time { color: var(--ink-2); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.stop-title { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.06rem; }
+.tag {
+  border: 0; padding: 0; color: var(--accent);
+  font-size: .66rem; letter-spacing: .14em;
+}
+.stop-note { border-left: 2px solid var(--accent); font-style: italic; }
+
+.chip, .loc-tabs button { background: transparent; border: 1px solid var(--line); border-radius: 0; }
+.chip.is-on, .loc-tabs button.is-on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.wx-row { border-bottom: 1px dotted var(--line); }
+.wx-day { letter-spacing: .06em; }
+
+.idea h4 { font-size: 1.02rem; }
+.links a { border: 0; border-bottom: 1px solid var(--accent); border-radius: 0; padding: 0 0 2px; }
+.foot { border-top: 2px solid var(--ink); font-style: italic; }
+.gallery img { border-radius: 0; border: 1px solid var(--line); }

@@ -7,8 +7,31 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils · Ithaca &amp; Cortland</title>
 <link rel="preconnect" href="https://api.github.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" id="theme-css" href="data:text/css,">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
+<script>
+  // Applied before first paint so switching themes does not flash the old one.
+  // Temporary: delete this block, the themebar, and assets/themes/ once a
+  // direction is picked, folding the winner into style.css.
+  (function () {
+    var THEMES = ["default", "park", "guide", "almanac"];
+    var q = new URLSearchParams(location.search).get("theme");
+    var t = THEMES.indexOf(q) > -1 ? q : (localStorage.getItem("theme") || "default");
+    window.__setTheme = function (name) {
+      localStorage.setItem("theme", name);
+      // An empty href would re-request the page itself, so use a null stylesheet.
+      document.getElementById("theme-css").href =
+        name === "default" ? "data:text/css," : "assets/themes/" + name + ".css";
+      document.querySelectorAll(".themebar button").forEach(function (b) {
+        b.classList.toggle("is-on", b.dataset.theme === name);
+      });
+    };
+    document.addEventListener("DOMContentLoaded", function () { window.__setTheme(t); });
+  })();
+</script>
 </head>
 <body>
 
@@ -78,6 +101,14 @@
 </footer>
 
 </div><!-- /#site -->
+
+<!-- Temporary theme picker. Remove once a direction is chosen. -->
+<div class="themebar">
+  <button data-theme="default" onclick="__setTheme('default')">Current</button>
+  <button data-theme="park" onclick="__setTheme('park')">Park</button>
+  <button data-theme="guide" onclick="__setTheme('guide')">Guide</button>
+  <button data-theme="almanac" onclick="__setTheme('almanac')">Almanac</button>
+</div>
 
 <div id="lightbox" class="lightbox" hidden>
   <button class="lb-close" aria-label="Close">✕</button>
