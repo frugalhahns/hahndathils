@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build data/site.json (public) and data/private.enc.json (passphrase-encrypted).
+"""Build data/site.enc.json: the entire site payload under one passphrase.
 
 Sources:
   - itinerary: Google Sheet, exported as CSV
@@ -7,9 +7,12 @@ Sources:
   - events:    Ticketmaster Discovery API (optional, needs TICKETMASTER_KEY)
   - ideas:     scripts/ideas.json (hand-curated)
 
-Street addresses and the Airbnb link never enter site.json. They go into
-private.enc.json, encrypted with AES-GCM under a key derived from
-TRIP_PASSPHRASE. The browser decrypts them only after someone types it.
+Nothing readable ships in the clear. The whole payload is encrypted with AES-GCM
+under a key derived from TRIP_PASSPHRASE, and the browser decrypts it only after
+someone types the passphrase.
+
+Files under photos/ are NOT covered by this. They are ordinary files in a public
+repo, reachable by direct URL whether or not the page has been unlocked.
 """
 
 import base64
@@ -294,18 +297,8 @@ def existing_salt(path):
         return None
 
 
-def write_private(items, passphrase, path):
-    secrets = {}
-    for it in items:
-        payload = {}
-        if it["_location"]:
-            payload["address"] = it["_location"]
-        if it["_privateLink"]:
-            payload["link"] = it["_privateLink"]
-        if payload:
-            secrets[it["id"]] = payload
-
-    plaintext = json.dumps(secrets, separators=(",", ":")).encode("utf-8")
+def write_encrypted(payload, passphrase, path):
+    plaintext = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     salt = existing_salt(path) or os.urandom(16)
     key = hashlib.pbkdf2_hmac("sha256", passphrase.encode("utf-8"), salt,
                               PBKDF2_ITERS, dklen=32)
@@ -321,7 +314,8 @@ def write_private(items, passphrase, path):
             "iv": base64.b64encode(iv).decode(),
             "ct": base64.b64encode(ct).decode(),
         }, f, indent=1)
-    print(f"  encrypted {len(secrets)} locations -> {os.path.basename(path)}")
+    kb = os.path.getsize(path) // 1024
+    print(f"  encrypted {len(plaintext)} bytes -> {os.path.basename(path)} ({kb} KB)")
 
 
 # --------------------------------------------------------------------------
@@ -330,7 +324,7 @@ def main():
     passphrase = os.environ.get("TRIP_PASSPHRASE", "").strip()
     if not passphrase:
         sys.exit("TRIP_PASSPHRASE is not set. Refusing to build without it "
-                 "(addresses would be dropped silently).")
+                 "(the whole payload would ship unencrypted).")
 
     os.makedirs(DATA, exist_ok=True)
 
@@ -347,26 +341,36 @@ def main():
     with open(os.path.join(ROOT, "scripts", "ideas.json")) as f:
         ideas = json.load(f)
 
-    write_private(items, passphrase, os.path.join(DATA, "private.enc.json"))
-
     dates = sorted({i["date"] for i in items})
-    public_items = [
-        {k: v for k, v in i.items() if not k.startswith("_")} for i in items
-    ]
+    stops = []
+    for i in items:
+        stop = {k: v for k, v in i.items() if not k.startswith("_")}
+        # Now that the whole payload is encrypted, the address and the booking
+        # link ride along with everything else instead of in a second blob.
+        stop["address"] = i["_location"]
+        stop["privateLink"] = i["_privateLink"]
+        stops.append(stop)
+
     site = {
         "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "trip": {"start": dates[0] if dates else None,
                  "end": dates[-1] if dates else None},
         "locations": [{"key": l["key"], "label": l["label"]} for l in LOCATIONS],
-        "itinerary": public_items,
+        "itinerary": stops,
         "weather": weather,
         "events": events,
         "ideas": ideas,
         "links": links,
     }
-    with open(os.path.join(DATA, "site.json"), "w") as f:
-        json.dump(site, f, indent=1)
-    print(f"  wrote site.json ({os.path.getsize(os.path.join(DATA, 'site.json'))} bytes)")
+
+    write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))
+
+    # Anything left from the old split-payload layout would still be readable.
+    for stale in ("site.json", "private.enc.json"):
+        p = os.path.join(DATA, stale)
+        if os.path.exists(p):
+            os.remove(p)
+            print(f"  removed stale {stale}")
 
 
 if __name__ == "__main__":

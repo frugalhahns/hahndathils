@@ -17,8 +17,7 @@ const el = (tag, cls, text) => {
   return n;
 };
 
-let SITE = null;
-let SECRETS = null; // populated after a successful unlock
+let SITE = null; // populated only after a successful unlock
 
 // ---------------------------------------------------------------- helpers
 
@@ -147,10 +146,15 @@ function renderStop(stop) {
   const meta = el("div", "stop-meta");
   if (stop.type) meta.append(el("span", "tag", stop.type));
 
-  // Address slot: town until unlocked, full street address after.
-  const addr = el("span", "addr-locked", stop.town || "");
-  addr.dataset.slot = "addr";
-  if (stop.town) meta.append(addr);
+  if (stop.address) {
+    const a = el("a", "addr", stop.address);
+    a.href = mapsUrl(stop.address);
+    a.target = "_blank";
+    a.rel = "noopener";
+    meta.append(a);
+  } else if (stop.town) {
+    meta.append(el("span", null, stop.town));
+  }
 
   const hourly = SITE.weather[stop.wx]?.hourly || [];
   const at = hourly.find((h) => h.start.slice(0, 10) === stop.date && h.start.slice(11, 13) === (stop.time || "").slice(0, 2));
@@ -159,6 +163,13 @@ function renderStop(stop) {
   if (stop.link) {
     const a = el("a", null, "link ↗");
     a.href = stop.link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    meta.append(a);
+  }
+  if (stop.privateLink) {
+    const a = el("a", null, "booking ↗");
+    a.href = stop.privateLink;
     a.target = "_blank";
     a.rel = "noopener";
     meta.append(a);
@@ -359,7 +370,7 @@ function openLightbox(src) {
 
 const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-async function decryptSecrets(blob, passphrase) {
+async function decryptPayload(blob, passphrase) {
   const material = await crypto.subtle.importKey(
     "raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]
   );
@@ -376,70 +387,9 @@ async function decryptSecrets(blob, passphrase) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-function applySecrets() {
-  document.querySelectorAll(".stop").forEach((row) => {
-    const secret = SECRETS[row.dataset.id];
-    if (!secret) return;
-    const slot = row.querySelector('[data-slot="addr"]');
-    if (secret.address && slot) {
-      slot.className = "addr";
-      slot.textContent = "";
-      const a = el("a", null, secret.address);
-      a.href = mapsUrl(secret.address);
-      a.target = "_blank";
-      a.rel = "noopener";
-      slot.append(a);
-    }
-    if (secret.link) {
-      const meta = row.querySelector(".stop-meta");
-      const a = el("a", null, "booking ↗");
-      a.href = secret.link; a.target = "_blank"; a.rel = "noopener";
-      meta.append(a);
-    }
-  });
-  const btn = $("#unlock");
-  btn.textContent = "🔓 Addresses shown";
-  btn.classList.add("is-open");
-  btn.disabled = true;
-}
+// ---------------------------------------------------------------- render
 
-async function tryUnlock(passphrase) {
-  const blob = await (await fetch("data/private.enc.json")).json();
-  SECRETS = await decryptSecrets(blob, passphrase); // throws on wrong passphrase
-  sessionStorage.setItem("trip-pass", passphrase);
-  applySecrets();
-}
-
-function wireUnlock() {
-  const dialog = $("#pass-dialog");
-  const btn = $("#unlock");
-  btn.hidden = false;
-  btn.onclick = () => { $("#pass-error").hidden = true; dialog.showModal(); };
-
-  $("#pass-form").addEventListener("submit", async (ev) => {
-    const ok = ev.submitter?.value === "ok";
-    if (!ok) return;
-    ev.preventDefault();
-    const okBtn = $("#pass-ok");
-    okBtn.disabled = true;
-    okBtn.textContent = "Decrypting...";
-    try {
-      await tryUnlock($("#pass-input").value);
-      dialog.close();
-    } catch {
-      $("#pass-error").hidden = false;
-    } finally {
-      okBtn.disabled = false;
-      okBtn.textContent = "Unlock";
-    }
-  });
-}
-
-// ---------------------------------------------------------------- boot
-
-async function main() {
-  SITE = await (await fetch("data/site.json", { cache: "no-cache" })).json();
-
+function renderSite() {
   renderCountdown();
   renderItinerary();
   renderNow();
@@ -463,22 +413,62 @@ async function main() {
   const lb = $("#lightbox");
   lb.onclick = () => { lb.hidden = true; };
 
-  wireUnlock();
+  $("#lock").onclick = () => {
+    sessionStorage.removeItem("trip-pass");
+    location.reload();
+  };
 
-  // Re-unlock silently within the same tab session.
-  const saved = sessionStorage.getItem("trip-pass");
-  if (saved) tryUnlock(saved).catch(() => sessionStorage.removeItem("trip-pass"));
+  $("#gate").hidden = true;
+  $("#site").hidden = false;
 
   // Jump to today if it is one of the trip days.
   const t = document.getElementById(`d-${todayISO()}`);
   if (t && !location.hash) t.scrollIntoView({ block: "start" });
 }
 
-main().catch((e) => {
-  document.querySelector("main").prepend(
-    Object.assign(document.createElement("p"), {
-      className: "error",
-      textContent: `Failed to load trip data: ${e.message}`,
-    })
-  );
-});
+// ---------------------------------------------------------------- boot
+
+async function unlock(passphrase) {
+  const blob = await (await fetch("data/site.enc.json", { cache: "no-cache" })).json();
+  SITE = await decryptPayload(blob, passphrase); // throws on a wrong passphrase
+  sessionStorage.setItem("trip-pass", passphrase);
+  renderSite();
+}
+
+function wireGate() {
+  const form = $("#gate-form");
+  const btn = $("#gate-btn");
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    $("#gate-error").hidden = true;
+    btn.disabled = true;
+    btn.textContent = "Unlocking...";
+    try {
+      await unlock($("#gate-input").value);
+    } catch {
+      $("#gate-error").hidden = false;
+      $("#gate-input").select();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Unlock";
+    }
+  });
+}
+
+async function main() {
+  wireGate();
+
+  // Stay unlocked while the tab lives, so a refresh does not re-prompt.
+  const saved = sessionStorage.getItem("trip-pass");
+  if (saved) {
+    try {
+      await unlock(saved);
+      return;
+    } catch {
+      sessionStorage.removeItem("trip-pass");
+    }
+  }
+  $("#gate-input").focus();
+}
+
+main();

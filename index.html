@@ -12,12 +12,27 @@
 </head>
 <body>
 
+<div id="gate" class="gate">
+  <form id="gate-form" class="gate-box">
+    <p class="kicker">Ithaca &amp; Cortland, New York</p>
+    <h1>Hahndathils</h1>
+    <p class="muted">This one is just for us. Passphrase is in the group chat.</p>
+    <input type="password" id="gate-input" placeholder="passphrase"
+           autocomplete="current-password" autocapitalize="off"
+           autocorrect="off" spellcheck="false" required>
+    <p id="gate-error" class="error" hidden>Wrong passphrase.</p>
+    <button type="submit" id="gate-btn" class="btn">Unlock</button>
+  </form>
+</div>
+
+<div id="site" hidden>
+
 <header class="hero">
   <div class="wrap">
     <p class="kicker">Ithaca &amp; Cortland, New York</p>
     <h1>Hahndathils</h1>
     <p id="countdown" class="countdown">…</p>
-    <button id="unlock" class="unlock" hidden>🔒 Unlock addresses</button>
+    <button id="lock" class="unlock">🔓 Lock again</button>
   </div>
 </header>
 
@@ -63,18 +78,7 @@
   <p class="muted">Weather from the National Weather Service. Itinerary from the family spreadsheet.</p>
 </footer>
 
-<dialog id="pass-dialog" class="dialog">
-  <form method="dialog" id="pass-form">
-    <h3>Unlock addresses</h3>
-    <p class="muted">Street addresses are encrypted. Ask in the group chat for the passphrase.</p>
-    <input type="password" id="pass-input" placeholder="passphrase" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <p id="pass-error" class="error" hidden>Wrong passphrase.</p>
-    <menu>
-      <button value="cancel" type="submit" class="btn-ghost">Cancel</button>
-      <button value="ok" id="pass-ok" type="submit" class="btn">Unlock</button>
-    </menu>
-  </form>
-</dialog>
+</div><!-- /#site -->
 
 <div id="lightbox" class="lightbox" hidden>
   <button class="lb-close" aria-label="Close">✕</button>
