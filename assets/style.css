@@ -358,7 +358,10 @@ a { color: var(--accent); }
 .gallery {
   display: flex; gap: 10px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  /* Proximity, not mandatory: mandatory snapping fights the slow auto-drift,
+     yanking it back to the nearest photo every frame. Proximity still snaps a
+     manual swipe but leaves small programmatic movement alone. */
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 4px;

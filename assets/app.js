@@ -626,23 +626,86 @@ function wireUpload() {
   };
 }
 
-function wireCarousel(track) {
-  const scrollBy = (dir) => {
-    const step = track.querySelector("img")?.getBoundingClientRect().width || 260;
-    track.scrollBy({ left: dir * (step + 10), behavior: "smooth" });
-  };
-  $("#ph-prev").onclick = () => scrollBy(-1);
-  $("#ph-next").onclick = () => scrollBy(1);
+const DRIFT_SPEED = 14;        // px per second, slow enough to read as ambient
+const DRIFT_RESUME_MS = 5000;  // stillness required before it picks back up
 
-  // Hide the arrows when there is nothing left to scroll toward.
+function wireCarousel(track) {
+  const prev = $("#ph-prev");
+  const next = $("#ph-next");
+  const arrows = $("#ph-arrows");
+
+  // scrollWidth forces layout, so measure on change rather than every frame.
+  let room = 0;
+  const measure = () => { room = track.scrollWidth - track.clientWidth; };
+  measure();
+  window.addEventListener("resize", measure);
+  track.querySelectorAll("img").forEach((img) => {
+    if (!img.complete) img.addEventListener("load", measure, { once: true });
+  });
+
+  // Declared before the reduced-motion bail below, so the arrow handlers can
+  // call hold() without tripping over an uninitialised binding.
+  let dir = 1;
+  let last = 0;
+  let paused = false;
+  let timer = null;
+
+  function hold(ms = DRIFT_RESUME_MS) {
+    paused = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => { paused = false; last = 0; }, ms);
+  }
+
+  const scrollByCard = (d) => {
+    const step = track.querySelector("img")?.getBoundingClientRect().width || 260;
+    track.scrollBy({ left: d * (step + 10), behavior: "smooth" });
+  };
+  prev.onclick = () => { hold(); scrollByCard(-1); };
+  next.onclick = () => { hold(); scrollByCard(1); };
+
+  let syncQueued = false;
   const sync = () => {
-    const max = track.scrollWidth - track.clientWidth - 2;
-    $("#ph-prev").disabled = track.scrollLeft <= 2;
-    $("#ph-next").disabled = track.scrollLeft >= max;
-    $("#ph-arrows").hidden = max <= 0;
+    if (syncQueued) return;
+    syncQueued = true;
+    requestAnimationFrame(() => {
+      syncQueued = false;
+      prev.disabled = track.scrollLeft <= 2;
+      next.disabled = track.scrollLeft >= room - 2;
+      arrows.hidden = room <= 0;
+    });
   };
   track.addEventListener("scroll", sync, { passive: true });
   sync();
+
+  // ---- slow drift ----
+  // Reverses at each end rather than jumping back to the start, which would
+  // read as a glitch. Never runs if the viewer asked for reduced motion.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  function step(ts) {
+    requestAnimationFrame(step);
+
+    // Idle while hidden, while the lightbox is up, or with nothing to scroll.
+    if (paused || room <= 2 || document.hidden || !$("#lightbox").hidden) {
+      last = ts;
+      return;
+    }
+    const dt = last ? Math.min((ts - last) / 1000, 0.1) : 0;
+    last = ts;
+
+    let pos = track.scrollLeft + dir * DRIFT_SPEED * dt;
+    if (pos >= room) { pos = room; dir = -1; }
+    else if (pos <= 0) { pos = 0; dir = 1; }
+    track.scrollLeft = pos;
+  }
+
+  ["pointerdown", "touchstart", "wheel"].forEach((ev) =>
+    track.addEventListener(ev, () => hold(), { passive: true })
+  );
+  track.addEventListener("mouseenter", () => { paused = true; clearTimeout(timer); });
+  track.addEventListener("mouseleave", () => hold(600));
+
+  requestAnimationFrame(step);
 }
 
 // ---------------------------------------------------------------- lightbox
