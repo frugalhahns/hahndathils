@@ -466,7 +466,7 @@ def prune_ideas(ideas, items):
 # cache busting
 # --------------------------------------------------------------------------
 
-ASSET_RE = re.compile(r'(assets/(?:app\.js|style\.css))(\?v=[0-9a-f]+)?')
+ASSET_RE = re.compile(r'(assets/(?:app\.js|style\.css|headers\.css))(\?v=[0-9a-f]+)?')
 
 
 def digest(rel):

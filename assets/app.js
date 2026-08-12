@@ -229,6 +229,63 @@ function renderStop(stop, prev) {
   return row;
 }
 
+/* Temporary: header style chooser. Delete this, the .hdrbar markup, and
+   assets/headers.css once a treatment is picked. */
+const HEADERS = [
+  ["", "Current"],
+  ["hdr-script", "Script"],
+  ["hdr-gradient", "Gradient"],
+  ["hdr-stack", "Stacked"],
+  ["hdr-photo", "Photo"],
+];
+
+function applyHeader(cls) {
+  HEADERS.forEach(([c]) => c && document.body.classList.remove(c));
+  if (cls) document.body.classList.add(cls);
+  localStorage.setItem("hdr", cls);
+  document.querySelectorAll(".hdrbar button").forEach((b) => {
+    b.classList.toggle("is-on", b.dataset.hdr === cls);
+  });
+  if (cls === "hdr-photo") mountHeroShots();
+}
+
+/* Cross-fades a few of your own photos behind the header. */
+let heroTimer = null;
+function mountHeroShots() {
+  const hero = document.querySelector(".hero");
+  if (!hero || hero.querySelector(".hero-shot")) return;
+  const shots = (SITE.photos || []).slice(0, 4);
+  if (!shots.length) return;
+
+  const layers = shots.map((name, i) => {
+    const d = el("div", "hero-shot" + (i === 0 ? " is-on" : ""));
+    d.style.backgroundImage = `url("${CONFIG.photoDir}/${encodeURIComponent(name)}")`;
+    hero.prepend(d);
+    return d;
+  });
+  if (layers.length < 2) return;
+
+  let i = 0;
+  clearInterval(heroTimer);
+  heroTimer = setInterval(() => {
+    layers[i].classList.remove("is-on");
+    i = (i + 1) % layers.length;
+    layers[i].classList.add("is-on");
+  }, 6000);
+}
+
+function initHeaderPicker() {
+  const bar = $(".hdrbar");
+  if (!bar) return;
+  HEADERS.forEach(([cls, label]) => {
+    const b = el("button", null, label);
+    b.dataset.hdr = cls;
+    b.onclick = () => applyHeader(cls);
+    bar.append(b);
+  });
+  applyHeader(localStorage.getItem("hdr") || "");
+}
+
 /* Two top-level views, switched from the floating bar at the bottom of the
    screen. Stay takes over the itinerary area rather than sitting under it, and
    hides the day tabs, which mean nothing while you are reading a door code. */
@@ -865,6 +922,7 @@ function renderSite() {
   renderLinks();
   renderStay();
   wireViewBar();
+  initHeaderPicker();
   renderPhotos();
   wireUpload();
 

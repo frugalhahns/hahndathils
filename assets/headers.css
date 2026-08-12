@@ -1,0 +1,124 @@
+/* Temporary: four header treatments to choose between, switched by a body
+   class from the picker at the bottom of the screen.
+
+   Once one is chosen, fold it into style.css and delete this file, the picker
+   markup, and initHeaderPicker in app.js. */
+
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap");
+
+/* ---------- 1. script ---------- */
+.hdr-script .hero h1 {
+  font-family: "Caveat", cursive;
+  font-size: clamp(3.2rem, 14vw, 5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: .95;
+  transform: rotate(-2.5deg);
+  transform-origin: left center;
+  margin-bottom: .35em;
+  display: inline-block;
+}
+/* Marker underline that overshoots the text, like a hand-drawn swash. */
+.hdr-script .hero h1::after {
+  content: "";
+  display: block;
+  width: 108%;
+  height: 5px;
+  margin-top: -.12em;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-2) 12%, var(--accent-2) 88%, transparent 100%);
+  transform: rotate(-.6deg);
+  opacity: .85;
+}
+.hdr-script .hero .kicker { letter-spacing: .22em; }
+
+/* ---------- 2. gradient poster ---------- */
+.hdr-gradient .hero h1 {
+  font-weight: 800;
+  letter-spacing: -.04em;
+  font-size: clamp(2.5rem, 11vw, 4rem);
+  background: linear-gradient(100deg, var(--accent) 0%, #7fd0c0 35%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Safari clips the descenders without a little breathing room. */
+  padding-bottom: .06em;
+}
+
+/* ---------- 3. stacked and cropped ---------- */
+.hdr-stack .hero h1 {
+  font-weight: 800;
+  font-size: clamp(2.8rem, 15vw, 5.2rem);
+  line-height: .84;
+  letter-spacing: -.045em;
+  margin-left: -.05em;   /* pull the cap edge to the margin */
+}
+.hdr-stack .hero h1 .t-1,
+.hdr-stack .hero h1 .t-2 { display: block; }
+.hdr-stack .hero h1 .t-2 {
+  color: var(--accent);
+  padding-left: .12em;
+}
+.hdr-stack .hero .kicker::after {
+  content: "";
+  display: block;
+  width: 54px; height: 3px;
+  margin-top: 12px;
+  background: var(--accent-2);
+}
+
+/* ---------- 4. photo behind the header ---------- */
+.hdr-photo .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 60px 0 44px;
+  border-bottom: 0;
+}
+.hdr-photo .hero .hero-shot {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+  z-index: -2;
+}
+.hdr-photo .hero .hero-shot.is-on { opacity: 1; }
+/* Scrim, or the text is unreadable over a bright photo. */
+.hdr-photo .hero::after {
+  content: "";
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, rgba(10,13,17,.55) 0%, rgba(10,13,17,.82) 70%, var(--bg) 100%);
+}
+.hdr-photo .hero h1 {
+  font-weight: 800;
+  letter-spacing: -.03em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, .5);
+}
+.hdr-photo .hero .countdown { color: #dfe7ee; }
+
+/* ---------- picker (temporary) ---------- */
+.hdrbar {
+  position: fixed; z-index: 70;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  display: flex; gap: 3px; padding: 4px;
+  background: rgba(22, 27, 33, .92);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hdrbar::-webkit-scrollbar { display: none; }
+.hdrbar button {
+  flex: 0 0 auto;
+  border: 0; background: none; cursor: pointer;
+  color: var(--ink-2);
+  font: 600 .76rem/1 var(--font-label);
+  padding: 9px 13px; border-radius: 999px;
+  white-space: nowrap;
+}
+.hdrbar button.is-on { background: #fff; color: #14181d; }
