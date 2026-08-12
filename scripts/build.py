@@ -265,8 +265,18 @@ def curated_events(trip_end):
     today = datetime.now().date().isoformat()
     horizon = max(trip_end or today,
                   (datetime.now() + timedelta(days=7)).date().isoformat())
-    keep = [e for e in events if today <= e.get("date", "") <= horizon]
-    print(f"  curated events: {len(keep)} of {len(events)} inside the window")
+
+    keep, adult = [], []
+    for e in events:
+        if not (today <= e.get("date", "") <= horizon):
+            continue
+        # This is a family trip with young kids, so late ticketed shows and
+        # anything age-restricted stays off the list. Flag them in events.json.
+        (adult if e.get("adults") else keep).append(e)
+
+    print(f"  curated events: {len(keep)} inside the window")
+    for e in adult:
+        print(f"    skipped (adults): {e['name']}")
     return keep
 
 

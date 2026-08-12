@@ -31,7 +31,8 @@
     "venue": "Homer, NY",
     "town": "Homer",
     "note": "Ticketed. 15 min from the Airbnb.",
-    "url": "https://www.experiencecortland.com/events"
+    "url": "https://www.experiencecortland.com/events",
+    "adults": true
   },
   {
     "name": "56th Annual Eastern States Regional Watch & Clock Show",
