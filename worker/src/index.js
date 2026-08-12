@@ -5,9 +5,14 @@
  * Worker takes one, checks the trip passphrase, and commits it to the repo with
  * a token that never leaves the server. Uploaders need no GitHub account.
  *
+ * The site itself is public, so the token below is not a secret in any real
+ * sense: it ships in the page source. It exists to stop drive-by scanners from
+ * posting to the endpoint, and so it can be rotated without touching anything
+ * else. Anyone who reads the page can upload.
+ *
  * Secrets (wrangler secret put):
- *   GH_TOKEN         fine-grained PAT, Contents: read and write, this repo only
- *   TRIP_PASSPHRASE  same passphrase the site is gated behind
+ *   GH_TOKEN      fine-grained PAT, Contents: read and write, this repo only
+ *   UPLOAD_TOKEN  must match CONFIG.uploadToken in assets/app.js
  */
 
 const MAX_BYTES = 8 * 1024 * 1024; // generous; the browser resizes to ~300 KB
@@ -137,8 +142,8 @@ export default {
       return json({ error: "expected JSON" }, 400, origin);
     }
 
-    if (!safeEqual(body.pass, env.TRIP_PASSPHRASE)) {
-      return json({ error: "wrong passphrase" }, 401, origin);
+    if (!safeEqual(body.token, env.UPLOAD_TOKEN)) {
+      return json({ error: "bad token" }, 401, origin);
     }
     if (isQuote) return saveQuote(env, body, origin);
 

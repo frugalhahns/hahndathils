@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""Build data/site.enc.json: the entire site payload under one passphrase.
+"""Build data/site.json, the whole payload the page renders.
 
 Sources:
   - itinerary: Google Sheet, exported as CSV
+  - the stay:  second tab of the same sheet
   - weather:   api.weather.gov (no key needed)
-  - events:    Ticketmaster Discovery API (optional, needs TICKETMASTER_KEY)
+  - events:    scripts/events.json, plus Ticketmaster if TICKETMASTER_KEY is set
   - ideas:     scripts/ideas.json (hand-curated)
+  - quotes:    one JSON file each under quotes/
 
-Nothing readable ships in the clear. The whole payload is encrypted with AES-GCM
-under a key derived from TRIP_PASSPHRASE, and the browser decrypts it only after
-someone types the passphrase.
-
-Files under photos/ are NOT covered by this. They are ordinary files in a public
-repo, reachable by direct URL whether or not the page has been unlocked.
+Everything here is public. The site has no passphrase, so this payload, the
+photos, and the Airbnb details including the lockbox code are readable by
+anyone with the URL.
 """
 
-import base64
 import csv
 import hashlib
 import io
@@ -27,8 +25,6 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 
@@ -37,7 +33,6 @@ SHEET_GID = "1657451631"   # itinerary tab
 STAY_GID = "0"             # Airbnb details tab
 
 UA = "hahndathils-trip-site (github.com/hahndathils)"
-PBKDF2_ITERS = 600_000
 
 # Resolved once from api.weather.gov/points/{lat},{lon}; all four sit in the
 # Binghamton (BGM) forecast office.
@@ -318,40 +313,6 @@ def fetch_events():
 
 
 # --------------------------------------------------------------------------
-# encryption
-# --------------------------------------------------------------------------
-
-def existing_salt(path):
-    """Reuse the salt across runs so only the ciphertext churns, not the KDF."""
-    try:
-        with open(path) as f:
-            return base64.b64decode(json.load(f)["salt"])
-    except Exception:
-        return None
-
-
-def write_encrypted(payload, passphrase, path):
-    plaintext = json.dumps(payload, separators=(",", ":")).encode("utf-8")
-    salt = existing_salt(path) or os.urandom(16)
-    key = hashlib.pbkdf2_hmac("sha256", passphrase.encode("utf-8"), salt,
-                              PBKDF2_ITERS, dklen=32)
-    iv = os.urandom(12)
-    ct = AESGCM(key).encrypt(iv, plaintext, None)
-
-    with open(path, "w") as f:
-        json.dump({
-            "v": 1,
-            "kdf": "PBKDF2-SHA256",
-            "iters": PBKDF2_ITERS,
-            "salt": base64.b64encode(salt).decode(),
-            "iv": base64.b64encode(iv).decode(),
-            "ct": base64.b64encode(ct).decode(),
-        }, f, indent=1)
-    kb = os.path.getsize(path) // 1024
-    print(f"  encrypted {len(plaintext)} bytes -> {os.path.basename(path)} ({kb} KB)")
-
-
-# --------------------------------------------------------------------------
 # the stay
 # --------------------------------------------------------------------------
 
@@ -565,11 +526,6 @@ def version_assets():
 # --------------------------------------------------------------------------
 
 def main():
-    passphrase = os.environ.get("TRIP_PASSPHRASE", "").strip()
-    if not passphrase:
-        sys.exit("TRIP_PASSPHRASE is not set. Refusing to build without it "
-                 "(the whole payload would ship unencrypted).")
-
     os.makedirs(DATA, exist_ok=True)
 
     print("itinerary...")
@@ -623,11 +579,15 @@ def main():
         "quotes": quotes,
     }
 
-    write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))
+    out = os.path.join(DATA, "site.json")
+    with open(out, "w") as f:
+        json.dump(site, f, separators=(",", ":"))
+    print(f"  wrote site.json ({os.path.getsize(out) // 1024} KB)")
+
     version_assets()
 
-    # Anything left from the old split-payload layout would still be readable.
-    for stale in ("site.json", "private.enc.json"):
+    # Left over from when the payload was encrypted.
+    for stale in ("site.enc.json", "private.enc.json"):
         p = os.path.join(DATA, stale)
         if os.path.exists(p):
             os.remove(p)

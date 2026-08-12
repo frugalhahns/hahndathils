@@ -99,31 +99,6 @@ a { color: var(--accent); }
 .muted { color: var(--ink-2); font-size: .875rem; }
 .error { color: #e0776a; font-size: .85rem; }
 
-/* ---------- gate ---------- */
-.gate {
-  position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
-  background: var(--gate-bg);
-}
-.gate-box { width: min(360px, 100%); text-align: left; }
-.gate-box h1 {
-  font-family: var(--font-script);
-  font-weight: 700;
-  letter-spacing: 0;
-  font-size: clamp(2.8rem, 13vw, 3.8rem);
-  margin-bottom: .2em;
-  transform: rotate(-2deg);
-  transform-origin: left center;
-}
-.gate-box input {
-  width: 100%; margin: 18px 0 4px; padding: 12px 14px;
-  background: var(--bg-2); border: 1px solid var(--line);
-  border-radius: 10px; color: var(--ink); font: inherit;
-}
-.gate-box input:focus { outline: none; border-color: var(--accent); }
-.gate-box .btn { width: 100%; margin-top: 12px; padding: 12px; }
-
 /* ---------- hero ---------- */
 .hero {
   background: var(--hero-bg);

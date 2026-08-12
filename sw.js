@@ -9,7 +9,7 @@
  *                   timestamp and never change in place
  */
 
-const CACHE = "hahndathils-v1";
+const CACHE = "hahndathils-v2";  // bumped when the payload moved to plaintext
 const SHELL = ["./", "./index.html"];
 
 self.addEventListener("install", (event) => {

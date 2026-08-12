@@ -8,7 +8,7 @@ Trip site for Ithaca and Cortland, NY. Static, hosted on GitHub Pages, no server
 - **7-day forecast** for Cortland, Ithaca, Lansing, and Montour Falls from the National Weather Service
 - **Ideas** for filling gaps, filterable to indoor picks when it rains
 - **Photos** uploaded straight to `photos/` through the GitHub web UI
-- **Addresses** encrypted, revealed only to someone who types the passphrase
+- **Quotes** anyone can add, funny things said over the years
 
 ## How it updates
 
@@ -32,39 +32,25 @@ are listed in `photos/.processed.json` and skipped on later runs.
 
 ## Privacy model
 
-The whole site sits behind one passphrase. `data/site.enc.json` holds the entire
-payload (itinerary, addresses, weather, ideas, links) encrypted with AES-GCM
-under a key derived from `TRIP_PASSPHRASE` via PBKDF2-SHA256 at 600,000
-iterations. The page renders nothing until the browser derives the same key with
-WebCrypto and decrypts it.
+There isn't one. The site is public and so is the repo. The itinerary, the
+Airbnb address, the host's phone number, and the lockbox code are all readable
+by anyone with the URL, as are the photos and quotes. The page carries a
+`noindex` header, which keeps it out of search results but does not restrict
+access.
 
-Know what this does not cover:
-
-- **Photos in `photos/` are public files.** The gallery only appears after
-  unlocking, but the JPEGs themselves are fetchable by direct URL, in the repo
-  and on the Pages site. Nothing protects them.
-- **The repo is public.** `index.html`, `assets/`, `scripts/`, `ideas.json`, and
-  the full git history are readable by anyone.
-- **The ciphertext is downloadable**, so it can be attacked offline at an
-  attacker's own pace. The passphrase is the entire defense. Use several random
-  words.
-
-Truly gating the photos needs a server checking a cookie, which GitHub Pages
-cannot do. That means Cloudflare Access or a Worker in front of the assets.
-Note that a private repo does not solve it either: private Pages access control
-is GitHub Enterprise only, so on Pro a private repo still publishes a public
-site.
+This was a deliberate choice. An earlier version encrypted the whole payload
+behind a passphrase; it was removed because the friction was not worth it for a
+family weekend.
 
 ## Local development
 
 ```sh
-pip install cryptography Pillow pillow-heif
-TRIP_PASSPHRASE='whatever' python scripts/build.py
+pip install Pillow pillow-heif
+python scripts/build.py
 python -m http.server 8000
 ```
 
-Then open http://localhost:8000. WebCrypto needs a secure context, which
-`localhost` counts as, so the unlock button works locally too.
+Then open http://localhost:8000.
 
 ## Editing content
 
@@ -76,10 +62,11 @@ Then open http://localhost:8000. WebCrypto needs a secure context, which
 
 ## Secrets
 
-| Name | Required | Purpose |
+| Name | Where | Purpose |
 | --- | --- | --- |
-| `TRIP_PASSPHRASE` | yes | encrypts the whole payload; the build fails without it |
-| `TICKETMASTER_KEY` | no | adds real concert and show listings within 35 miles |
+| `TICKETMASTER_KEY` | GitHub Actions | optional; adds ticketed shows within 35 miles |
+| `GH_TOKEN` | Worker | fine-grained PAT, Contents read and write, this repo only |
+| `UPLOAD_TOKEN` | Worker | must match `CONFIG.uploadToken` in `assets/app.js` |
 
 ## Photo uploads without a GitHub account
 
@@ -99,7 +86,7 @@ Deploy:
 cd worker
 npx wrangler login
 npx wrangler secret put GH_TOKEN         # fine-grained PAT, Contents RW, this repo only
-npx wrangler secret put TRIP_PASSPHRASE  # same passphrase the site uses
+npx wrangler secret put UPLOAD_TOKEN     # must match CONFIG.uploadToken in app.js
 npx wrangler deploy
 ```
 

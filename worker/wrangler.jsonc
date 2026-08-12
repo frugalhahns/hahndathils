@@ -13,5 +13,5 @@
   }
   // Secrets, set with `wrangler secret put <NAME>`:
   //   GH_TOKEN         fine-grained PAT, Contents read+write, this repo only
-  //   TRIP_PASSPHRASE  same passphrase the site is gated behind
+  //   UPLOAD_TOKEN     must match CONFIG.uploadToken in assets/app.js
 }

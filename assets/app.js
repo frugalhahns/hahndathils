@@ -1,5 +1,5 @@
 // Hahndathils trip site. No framework, no build step.
-// Decrypts data/site.enc.json in the browser once the passphrase is entered.
+// Renders data/site.json. Everything on this site is public.
 
 import { initSparkles } from "./sparkle.js?v=211e46b1";
 
@@ -8,17 +8,12 @@ const CONFIG = {
   // Cloudflare Worker that accepts uploads and commits them to the repo, so
   // nobody needs a GitHub account. Empty string hides the upload button.
   uploadUrl: "https://hahndathils-upload.frugalhahns.workers.dev/upload",
+  // Public by definition: this ships in the page source. It only stops random
+  // scanners from posting to the endpoint, and can be rotated on its own.
+  uploadToken: "hahndathils-2026-tetherball",
   maxEdge: 1600,
   jpegQuality: 0.82,
 };
-
-// Remembered per device, not per tab. iOS discards background tabs freely, and
-// retyping a passphrase every time you reopen the site over four days is the
-// kind of friction that gets a site abandoned.
-const PASS_KEY = "trip-pass";
-const rememberPass = (v) => localStorage.setItem(PASS_KEY, v);
-const savedPass = () => localStorage.getItem(PASS_KEY);
-const forgetPass = () => localStorage.removeItem(PASS_KEY);
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, text) => {
@@ -28,7 +23,7 @@ const el = (tag, cls, text) => {
   return n;
 };
 
-let SITE = null;      // populated only after a successful unlock
+let SITE = null;      // the whole payload, fetched at load
 let PHOTOS = [];      // image URLs, in gallery order
 let LB_INDEX = 0;     // which one the lightbox is showing
 
@@ -312,7 +307,7 @@ function wireQuoteForm() {
       const res = await fetch(CONFIG.uploadUrl.replace(/\/upload$/, "/quote"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...quote, pass: savedPass() }),
+        body: JSON.stringify({ ...quote, token: CONFIG.uploadToken }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -694,13 +689,13 @@ function blobToBase64(blob) {
   });
 }
 
-async function uploadOne(file, pass) {
+async function uploadOne(file) {
   const blob = await shrink(file);
   const res = await fetch(CONFIG.uploadUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      pass,
+      token: CONFIG.uploadToken,
       taken: new Date(file.lastModified || Date.now()).toISOString(),
       data: await blobToBase64(blob),
     }),
@@ -715,9 +710,6 @@ async function uploadOne(file, pass) {
 async function handleUpload(files) {
   const status = $("#ph-status");
   const track = $("#photos-body");
-  const pass = savedPass();
-  if (!pass) { status.textContent = "Unlock the site first."; return; }
-
   let done = 0;
   const failures = [];
   status.hidden = false;
@@ -725,7 +717,7 @@ async function handleUpload(files) {
   for (const file of files) {
     status.textContent = `Uploading ${done + 1} of ${files.length}...`;
     try {
-      const localUrl = await uploadOne(file, pass);
+      const localUrl = await uploadOne(file);
       // Show it straight away. The real file lands in the gallery a minute or
       // two later once the build finishes, so this covers the gap.
       const img = el("img");
@@ -908,27 +900,6 @@ function wireLightbox() {
   }, { passive: true });
 }
 
-// ---------------------------------------------------------------- unlock
-
-const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-
-async function decryptPayload(blob, passphrase) {
-  const material = await crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(passphrase), "PBKDF2", false, ["deriveKey"]
-  );
-  const key = await crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: b64(blob.salt), iterations: blob.iters, hash: "SHA-256" },
-    material,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["decrypt"]
-  );
-  const plain = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: b64(blob.iv) }, key, b64(blob.ct)
-  );
-  return JSON.parse(new TextDecoder().decode(plain));
-}
-
 // ---------------------------------------------------------------- render
 
 function renderSite() {
@@ -967,115 +938,25 @@ function renderSite() {
 
   wireLightbox();
 
-  $("#lock").onclick = () => {
-    forgetPass();
-    location.reload();
-  };
-
-  $("#gate").hidden = true;
-  $("#site").hidden = false;
 }
 
 // ---------------------------------------------------------------- boot
 
-async function unlock(passphrase) {
-  const blob = await (await fetch("data/site.enc.json", { cache: "no-cache" })).json();
-  SITE = await decryptPayload(blob, passphrase); // throws on a wrong passphrase
-  rememberPass(passphrase);
-  renderSite();
-}
-
-function wireGate() {
-  const form = $("#gate-form");
-  const btn = $("#gate-btn");
-  form.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    $("#gate-error").hidden = true;
-    btn.disabled = true;
-    btn.textContent = "Unlocking...";
-    try {
-      await unlock($("#gate-input").value);
-    } catch {
-      $("#gate-error").hidden = false;
-      $("#gate-input").select();
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Unlock";
-    }
-  });
-}
-
-/* The now card is computed once at render, so an open tab would sit on the
-   morning's hour all day. These keep it honest without a manual reload. */
-const TICK_MS = 2 * 60 * 1000;      // recompute "up next" and the current hour
-const REFETCH_MS = 30 * 60 * 1000;  // pull a newer payload if the build ran
-
-let lastFetch = Date.now();
-
-async function refreshPayload() {
-  if (!SITE) return;
-  try {
-    const res = await fetch("data/site.enc.json", { cache: "no-store" });
-    if (!res.ok) return;
-    const fresh = await decryptPayload(await res.json(), savedPass());
-    lastFetch = Date.now();
-    if (fresh.generated === SITE.generated) return;  // same build, nothing to do
-
-    SITE = fresh;
-    renderCountdown();
-    renderNow();
-    $("#generated").textContent =
-      "Updated " + new Date(SITE.generated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-  } catch {
-    // Offline or the passphrase rotated. The cached payload stays on screen.
-  }
-}
-
-function startAutoRefresh() {
-  setInterval(() => {
-    renderCountdown();
-    renderNow();
-  }, TICK_MS);
-
-  setInterval(refreshPayload, REFETCH_MS);
-
-  // Coming back to a backgrounded tab is the case that matters most: the phone
-  // was in a pocket for hours and the timers above were throttled or frozen.
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) return;
-    renderCountdown();
-    renderNow();
-    if (Date.now() - lastFetch > REFETCH_MS) refreshPayload();
-  });
-}
-
-/* Registered regardless of unlock state so the shell is cached before anyone
-   drives into a valley with no signal. */
-function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((e) => {
-      console.warn("offline support unavailable:", e.message);
-    });
-  });
-}
-
 async function main() {
   registerServiceWorker();
   initSparkles();
-  wireGate();
 
-  // Stay unlocked while the tab lives, so a refresh does not re-prompt.
-  const saved = savedPass();
-  if (saved) {
-    try {
-      await unlock(saved);
-      return;
-    } catch {
-      forgetPass();
-    }
-  }
-  $("#gate-input").focus();
+  const res = await fetch("data/site.json", { cache: "no-cache" });
+  if (!res.ok) throw new Error(`could not load trip data (${res.status})`);
+  SITE = await res.json();
+  renderSite();
 }
 
-main();
+main().catch((e) => {
+  document.querySelector("main").prepend(
+    Object.assign(document.createElement("p"), {
+      className: "error",
+      textContent: e.message,
+    })
+  );
+});
