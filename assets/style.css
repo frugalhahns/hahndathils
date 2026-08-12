@@ -266,47 +266,78 @@ a { color: var(--accent); }
 .event:last-child { border-bottom: 0; }
 .event-note { margin-top: 3px; font-size: .82rem; color: var(--ink-2); }
 
-/* ---------- disclosures ---------- */
-.disclosure, .day-events { border-top: 1px solid var(--line); }
+/* ---------- disclosures ----------
+   These read as buttons on purpose. A bare row with a faint chevron did not
+   look tappable, so the whole summary is a bordered, tinted control with an
+   explicit Show/Hide label next to the arrow. */
+
 .disclosure > summary, .day-events > summary {
   display: flex; align-items: center; gap: 10px;
-  padding: 13px 2px; cursor: pointer;
+  padding: 14px 16px;
+  cursor: pointer;
   list-style: none;
   color: var(--ink);
   user-select: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color .15s ease, background .15s ease;
 }
 .disclosure > summary::-webkit-details-marker,
 .day-events > summary::-webkit-details-marker { display: none; }
 
+.disclosure > summary:hover, .day-events > summary:hover {
+  border-color: var(--accent);
+  background: var(--bg-2);
+}
+/* Square off the bottom while open so the panel reads as attached. */
+.disclosure[open] > summary, .day-events[open] > summary {
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
 .disclosure-title { font-weight: 600; font-size: .95rem; }
 .disclosure-count {
-  font-size: .7rem; color: var(--ink-2);
-  border: 1px solid var(--line); border-radius: 999px;
-  padding: 1px 8px; font-variant-numeric: tabular-nums;
+  font-size: .72rem; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px;
+  padding: 2px 9px; white-space: nowrap;
 }
-/* Chevron, rotated when open. */
-.disclosure > summary::after, .day-events > summary::after {
-  content: "›";
-  margin-left: auto;
-  font-size: 1.2rem; line-height: 1;
-  color: var(--ink-2);
-  transform: rotate(90deg);
-  transition: transform .18s ease;
-}
-.disclosure[open] > summary::after, .day-events[open] > summary::after {
-  transform: rotate(-90deg);
-}
-.disclosure > summary:hover, .day-events > summary:hover { color: var(--accent); }
-.disclosure-body { padding: 2px 0 18px; }
 
-/* Events nested under a day read as secondary to the stops above them. */
-.day-events {
-  margin-top: 14px;
-  border-top: 1px dashed var(--line);
+/* Word plus arrow. The word is what makes the control legible at a glance. */
+.disclosure-action {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 7px;
+  color: var(--accent); font-size: .8rem; font-weight: 600;
 }
-.day-events > summary { padding: 11px 2px; }
-.day-events .disclosure-title { font-weight: 500; font-size: .85rem; color: var(--ink-2); }
-.day-events .disclosure-body { padding-bottom: 4px; }
+.disclosure-action::before { content: "Show"; }
+.disclosure[open] .disclosure-action::before,
+.day-events[open] .disclosure-action::before { content: "Hide"; }
+.disclosure-action::after {
+  content: "›";
+  display: grid; place-items: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  font-size: 1.15rem; line-height: 1;
+  transform: rotate(90deg);
+  transition: transform .2s ease;
+}
+.disclosure[open] .disclosure-action::after,
+.day-events[open] .disclosure-action::after { transform: rotate(-90deg); }
+
+.disclosure-body {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Nested under a day, so slightly quieter than a top-level section. */
+.day-events { margin-top: 16px; }
+.day-events > summary { padding: 11px 14px; background: transparent; }
+.day-events .disclosure-title { font-weight: 500; font-size: .87rem; }
+.day-events .disclosure-body { padding: 4px 14px 10px; }
 
 /* ---------- photos ---------- */
 .section-head { display: flex; align-items: center; gap: 12px; }

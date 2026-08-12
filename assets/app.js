@@ -327,7 +327,7 @@ function renderLocTabs() {
 function renderIdeas(filter = "all") {
   const host = $("#ideas-body");
   host.innerHTML = "";
-  $("#ideas-count").textContent = String(SITE.ideas.length);
+  $("#ideas-count").textContent = `${SITE.ideas.length} ideas`;
   SITE.ideas
     .filter((i) => filter === "all" || (filter === "indoor" ? i.indoor : !i.indoor))
     .forEach((i) => {
@@ -374,7 +374,9 @@ function dayEvents(date) {
   const summary = el("summary");
   summary.append(el("span", "disclosure-title",
     `Also happening ${localDate(date).toLocaleDateString(undefined, { weekday: "long" })}`));
-  summary.append(el("span", "disclosure-count", String(events.length)));
+  summary.append(el("span", "disclosure-count",
+    `${events.length} event${events.length === 1 ? "" : "s"}`));
+  summary.append(el("span", "disclosure-action"));
   box.append(summary);
 
   const body = el("div", "disclosure-body");
@@ -393,7 +395,9 @@ function renderEvents() {
   const box = el("details", "disclosure");
   const summary = el("summary");
   summary.append(el("span", "disclosure-title", "Happening nearby this week"));
-  summary.append(el("span", "disclosure-count", String(leftover.length)));
+  summary.append(el("span", "disclosure-count",
+    `${leftover.length} event${leftover.length === 1 ? "" : "s"}`));
+  summary.append(el("span", "disclosure-action"));
   box.append(summary);
 
   const body = el("div", "disclosure-body");
