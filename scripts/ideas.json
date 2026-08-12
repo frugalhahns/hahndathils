@@ -17,7 +17,6 @@
   { "name": "Sciencenter", "blurb": "Hands-on science museum. Built for kids but the outdoor mini golf is fun regardless.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.sciencenter.org/" },
   { "name": "Center Ithaca / Ithaca Commons", "blurb": "Food court with the soup dumplings, plus the pedestrian mall shops.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.downtownithaca.com/" },
   { "name": "Cortland Beer Company", "blurb": "Small taproom downtown Cortland. Closest good beer to the Airbnb.", "town": "Cortland", "indoor": true, "drive": "5 min from Airbnb", "url": "https://www.cortlandbeer.com/" },
-  { "name": "Purity Ice Cream", "blurb": "Ithaca institution since 1936. The other dairy option if the Cornell line is long.", "town": "Ithaca", "indoor": true, "drive": "in town", "url": "https://www.purityicecream.com/" },
   { "name": "1890 House Museum", "blurb": "Chateau-style mansion with a tower you can climb. Right in Cortland.", "town": "Cortland", "indoor": true, "drive": "5 min from Airbnb", "url": "https://www.the1890house.org/" },
   { "name": "Cortland Repertory Theatre", "blurb": "Summer stock at the Pavilion in Little York Lake. Check what is running.", "town": "Cortland", "indoor": true, "drive": "15 min from Airbnb", "url": "https://www.cortlandrep.org/" }
 ]
