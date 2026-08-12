@@ -319,6 +319,40 @@ def write_encrypted(payload, passphrase, path):
 
 
 # --------------------------------------------------------------------------
+# cache busting
+# --------------------------------------------------------------------------
+
+ASSET_RE = re.compile(r'(assets/(?:app\.js|style\.css))(\?v=[0-9a-f]+)?')
+
+
+def version_assets():
+    """Stamp a content hash onto the asset URLs in index.html.
+
+    GitHub Pages serves these with a 10 minute max-age and no way to override
+    it, so without a changing query string phones sit on a stale app.js long
+    after a deploy. The hash only moves when the file's bytes move, so this is
+    idempotent and does not churn the diff on unrelated builds.
+    """
+    html_path = os.path.join(ROOT, "index.html")
+    with open(html_path) as f:
+        html = f.read()
+
+    def stamp(m):
+        rel = m.group(1)
+        with open(os.path.join(ROOT, rel), "rb") as f:
+            digest = hashlib.sha1(f.read()).hexdigest()[:8]
+        return f"{rel}?v={digest}"
+
+    updated = ASSET_RE.sub(stamp, html)
+    if updated != html:
+        with open(html_path, "w") as f:
+            f.write(updated)
+        print("  stamped asset versions into index.html")
+    else:
+        print("  asset versions already current")
+
+
+# --------------------------------------------------------------------------
 
 def main():
     passphrase = os.environ.get("TRIP_PASSPHRASE", "").strip()
@@ -364,6 +398,7 @@ def main():
     }
 
     write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))
+    version_assets()
 
     # Anything left from the old split-payload layout would still be readable.
     for stale in ("site.json", "private.enc.json"):
