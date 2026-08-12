@@ -227,6 +227,37 @@ function renderStop(stop, prev) {
   return row;
 }
 
+/* Two top-level views, switched from the floating bar at the bottom of the
+   screen. Stay takes over the itinerary area rather than sitting under it, and
+   hides the day tabs, which mean nothing while you are reading a door code. */
+function setView(view) {
+  const staying = view === "stay";
+
+  $("#stay").hidden = !staying;
+  $("#days").hidden = staying;
+  $("#daynav").hidden = staying;
+  $("#itinerary-title").textContent =
+    staying ? "Where we're staying" : "Flexible itinerary";
+
+  document.querySelectorAll("#viewbar button").forEach((b) => {
+    const on = b.dataset.view === view;
+    b.classList.toggle("is-on", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function wireViewBar() {
+  const bar = $("#viewbar");
+  if (!SITE.stay?.length) { bar.hidden = true; return; }
+  bar.hidden = false;
+  bar.querySelectorAll("button").forEach((b) => {
+    b.onclick = () => setView(b.dataset.view);
+  });
+  setView("trip");
+}
+
 /* Which day to open on: today if we are mid-trip, otherwise the next day
    coming up, otherwise everything (the trip is over, so it is a scrapbook). */
 function defaultDay(dates) {
@@ -236,15 +267,8 @@ function defaultDay(dates) {
 }
 
 function selectDay(value, { scroll = false } = {}) {
-  const staying = value === "stay";
-
-  // The Stay panel takes over the itinerary area rather than sitting below it.
-  $("#stay").hidden = !staying;
-  $("#days").hidden = staying;
-  $("#itinerary-title").textContent = staying ? "Where we're staying" : "Flexible itinerary";
-
   document.querySelectorAll(".day").forEach((sec) => {
-    sec.hidden = staying || (value !== "all" && sec.dataset.date !== value);
+    sec.hidden = value !== "all" && sec.dataset.date !== value;
   });
   document.querySelectorAll("#daynav-inner button").forEach((b) => {
     const on = b.dataset.day === value;
@@ -311,14 +335,6 @@ function renderItinerary() {
   all.setAttribute("aria-pressed", "false");
   all.onclick = () => selectDay("all", { scroll: true });
   nav.append(all);
-
-  if (SITE.stay?.length) {
-    const stay = el("button", "nav-wide", "🏠 Stay");
-    stay.dataset.day = "stay";
-    stay.setAttribute("aria-pressed", "false");
-    stay.onclick = () => selectDay("stay", { scroll: true });
-    nav.append(stay);
-  }
 
   selectDay(defaultDay(dates));
 }
@@ -834,6 +850,7 @@ function renderSite() {
   renderEvents();
   renderLinks();
   renderStay();
+  wireViewBar();
   renderPhotos();
   wireUpload();
 

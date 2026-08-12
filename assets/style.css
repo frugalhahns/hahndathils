@@ -448,12 +448,36 @@ a.stay-value { display: inline-block; }
   line-height: 1.6;
 }
 
-/* Day tabs are two-line and narrow; All and Stay are single-line labels. */
+/* The All tab is a single-line label next to the two-line day tabs. */
 .daynav button.nav-wide {
   flex-direction: row;
   min-height: 44px;
   font-size: .84rem; font-weight: 600;
 }
+
+/* ---------- floating view switcher ---------- */
+.viewbar {
+  position: fixed; z-index: 60;
+  left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  display: flex; gap: 4px; padding: 4px;
+  background: rgba(22, 27, 33, .9);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+}
+.viewbar button {
+  border: 0; background: none; cursor: pointer;
+  color: var(--ink-2);
+  font: 600 .84rem/1 var(--font-label);
+  padding: 10px 18px; border-radius: 999px;
+  white-space: nowrap;
+}
+.viewbar button.is-on { background: var(--accent); color: var(--bg); }
+
+/* Keep the last section clear of the floating bar. */
+.foot { padding-bottom: 64px; }
 
 /* ---------- compact header once the trip has started ---------- */
 .is-trip .hero { padding: 22px 0 18px; }
