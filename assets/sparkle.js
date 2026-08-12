@@ -42,13 +42,17 @@ function spawn(x, y, { size = 10, spread = 46, life = 900 } = {}) {
   const dx = Math.cos(angle) * dist;
   const dy = Math.sin(angle) * dist + spread * 0.5;
 
+  /* Pops to full size early, then holds bright for most of its life before
+     fading at the very end. Scaling and fading evenly across the duration
+     reads as much shorter than it is, because it starts vanishing at once. */
   const anim = s.animate(
     [
-      { transform: "translate(-50%, -50%) scale(0) rotate(0deg)", opacity: 1 },
-      { transform: `translate(calc(-50% + ${dx * 0.6}px), calc(-50% + ${dy * 0.4}px)) scale(1) rotate(90deg)`, opacity: 1, offset: 0.3 },
-      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0) rotate(200deg)`, opacity: 0 },
+      { transform: "translate(-50%, -50%) scale(0) rotate(0deg)", opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx * 0.35}px), calc(-50% + ${dy * 0.2}px)) scale(1.1) rotate(60deg)`, opacity: 1, offset: 0.12 },
+      { transform: `translate(calc(-50% + ${dx * 0.8}px), calc(-50% + ${dy * 0.7}px)) scale(1) rotate(150deg)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + spread * 0.35}px)) scale(.25) rotate(260deg)`, opacity: 0, offset: 1 },
     ],
-    { duration: life * (0.7 + Math.random() * 0.6), easing: "cubic-bezier(.2,.6,.35,1)" }
+    { duration: life * (0.8 + Math.random() * 0.5), easing: "cubic-bezier(.15,.7,.3,1)" }
   );
 
   anim.onfinish = () => { s.remove(); alive--; };
@@ -62,9 +66,16 @@ function burst(x, y, count, opts) {
 export function initSparkles() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  // Every tap and click gets a small burst.
+  /* A fingertip covers the point it just tapped, so touch gets a wider, larger,
+     longer burst than a mouse click. Otherwise most of it happens under the
+     finger and is gone by the time the finger lifts. */
+  const tapOpts = (ev) => (ev.pointerType === "touch"
+    ? { size: 13, spread: 85, life: 2000 }
+    : { size: 9, spread: 46, life: 1100 });
+
   document.addEventListener("pointerdown", (ev) => {
-    burst(ev.clientX, ev.clientY, 7, { size: 9, spread: 42, life: 800 });
+    const o = tapOpts(ev);
+    burst(ev.clientX, ev.clientY, ev.pointerType === "touch" ? 10 : 7, o);
   }, { passive: true });
 
   // A bigger one for the title, which is the obvious thing a kid will poke.
@@ -73,7 +84,12 @@ export function initSparkles() {
     title.style.cursor = "pointer";
     title.addEventListener("pointerdown", (ev) => {
       ev.stopPropagation();
-      burst(ev.clientX, ev.clientY, 26, { size: 13, spread: 130, life: 1300 });
+      const touch = ev.pointerType === "touch";
+      burst(ev.clientX, ev.clientY, 30, {
+        size: touch ? 16 : 13,
+        spread: touch ? 175 : 140,
+        life: touch ? 2600 : 1700,
+      });
     });
   }
 
