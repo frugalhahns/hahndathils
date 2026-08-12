@@ -370,10 +370,6 @@ function renderLinks() {
 
 // ---------------------------------------------------------------- photos
 
-function uploadUrl(owner, repo) {
-  return `https://github.com/${owner}/${repo}/upload/${CONFIG.photoBranch}/${CONFIG.photoDir}`;
-}
-
 async function renderPhotos() {
   const hint = $("#photos-hint");
   const host = $("#photos-body");
@@ -391,17 +387,13 @@ async function renderPhotos() {
   }
 
   if (!files.length) {
-    hint.innerHTML =
-      `Nothing yet. <a href="${uploadUrl(owner, repo)}" target="_blank" rel="noopener">Upload a photo</a>, ` +
-      `and it shows up here a minute or two later.`;
+    hint.hidden = true;
     return;
   }
 
   // Newest first, assuming the resize workflow's date-prefixed filenames.
   files.sort((a, b) => b.name.localeCompare(a.name));
-  hint.innerHTML =
-    `${files.length} photo${files.length === 1 ? "" : "s"} · ` +
-    `<a href="${uploadUrl(owner, repo)}" target="_blank" rel="noopener">add more</a>`;
+  hint.textContent = `${files.length} photo${files.length === 1 ? "" : "s"}`;
 
   PHOTOS = files.map((f) => `${CONFIG.photoDir}/${encodeURIComponent(f.name)}`);
 
