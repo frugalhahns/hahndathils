@@ -299,8 +299,10 @@ a { color: var(--accent); }
 .disclosure-title { font-weight: 600; font-size: .95rem; }
 .disclosure-count {
   font-size: .72rem; color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  /* Plain rgba first: color-mix needs Chrome 111+, and some Android phones
+     are behind that. The fallback is visually equivalent here. */
+  background: rgba(95, 184, 166, .14);
+  border: 1px solid rgba(95, 184, 166, .35);
   border-radius: 999px;
   padding: 2px 9px; white-space: nowrap;
 }
@@ -318,7 +320,7 @@ a { color: var(--accent); }
   content: "›";
   display: grid; place-items: center;
   width: 24px; height: 24px; border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: rgba(95, 184, 166, .16);
   font-size: 1.15rem; line-height: 1;
   transform: rotate(90deg);
   transition: transform .2s ease;
@@ -416,3 +418,38 @@ a { color: var(--accent); }
 .btn-ghost { background: none; border: 1px solid var(--line); color: var(--ink-2); }
 
 .foot { margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--line); }
+
+/* ---------- stop hints and house info ---------- */
+.stop-hint {
+  margin-top: 6px; font-size: .8rem; color: var(--accent-2);
+}
+.house-row {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 8px 0; border-bottom: 1px solid var(--line);
+  font-size: .88rem;
+}
+.house-row:last-child { border-bottom: 0; }
+.house-label { color: var(--ink-2); min-width: 110px; }
+.house-value { font-weight: 600; user-select: all; }
+
+/* ---------- compact header once the trip has started ---------- */
+.is-trip .hero { padding: 22px 0 18px; }
+.is-trip .hero h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+.is-trip .hero .unlock { margin-top: 10px; }
+
+/* ---------- accessibility ---------- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Pointer users never see the ring; keyboard users always do. */
+:focus:not(:focus-visible) { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

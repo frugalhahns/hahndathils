@@ -1,18 +1,22 @@
 // Hahndathils trip site. No framework, no build step.
-// Reads data/site.json (public) and decrypts data/private.enc.json on demand.
+// Decrypts data/site.enc.json in the browser once the passphrase is entered.
 
 const CONFIG = {
-  // Filled in after the repo exists. Photos are read straight from the
-  // GitHub contents API, so uploading a file to /photos is the whole workflow.
-  photoRepo: "frugalhahns/hahndathils",
   photoDir: "photos",
-  photoBranch: "main",
   // Cloudflare Worker that accepts uploads and commits them to the repo, so
   // nobody needs a GitHub account. Empty string hides the upload button.
   uploadUrl: "https://hahndathils-upload.frugalhahns.workers.dev/upload",
   maxEdge: 1600,
   jpegQuality: 0.82,
 };
+
+// Remembered per device, not per tab. iOS discards background tabs freely, and
+// retyping a passphrase every time you reopen the site over four days is the
+// kind of friction that gets a site abandoned.
+const PASS_KEY = "trip-pass";
+const rememberPass = (v) => localStorage.setItem(PASS_KEY, v);
+const savedPass = () => localStorage.getItem(PASS_KEY);
+const forgetPass = () => localStorage.removeItem(PASS_KEY);
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, text) => {
@@ -27,8 +31,6 @@ let PHOTOS = [];      // image URLs, in gallery order
 let LB_INDEX = 0;     // which one the lightbox is showing
 
 // ---------------------------------------------------------------- helpers
-
-const IMG_RE = /\.(jpe?g|png|gif|webp|avif)$/i;
 
 function wxEmoji(short) {
   const s = (short || "").toLowerCase();
@@ -148,7 +150,12 @@ function dayHigh(dateISO, locKey) {
   return periods.find((p) => p.day && p.start.slice(0, 10) === dateISO);
 }
 
-function renderStop(stop) {
+function directionsUrl(from, to) {
+  return "https://www.google.com/maps/dir/?api=1" +
+    `&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
+}
+
+function renderStop(stop, prev) {
   const row = el("div", "stop");
   row.dataset.id = stop.id;
 
@@ -188,7 +195,20 @@ function renderStop(stop) {
     a.rel = "noopener";
     meta.append(a);
   }
+
+  // Route from wherever you just were, rather than from wherever the phone
+  // thinks you are.
+  if (prev?.address && stop.address && prev.address !== stop.address) {
+    const a = el("a", null, "directions ↗");
+    a.href = directionsUrl(prev.address, stop.address);
+    a.target = "_blank";
+    a.rel = "noopener";
+    meta.append(a);
+  }
   body.append(meta);
+
+  // "35 mins from Airbnb", "Option 1". Short enough to read in place.
+  if (stop.hint) body.append(el("div", "stop-hint", stop.hint));
 
   if (stop.notes) {
     const note = el("div", "stop-note", stop.notes);
@@ -220,8 +240,20 @@ function selectDay(value, { scroll = false } = {}) {
     sec.hidden = value !== "all" && sec.dataset.date !== value;
   });
   document.querySelectorAll("#daynav-inner button").forEach((b) => {
-    b.classList.toggle("is-on", b.dataset.day === value);
+    const on = b.dataset.day === value;
+    b.classList.toggle("is-on", on);
+    b.setAttribute("aria-pressed", String(on));
   });
+
+  // Point the forecast at wherever that day is mostly spent, so it does not
+  // sit on Cortland while you are reading about a day in Ithaca.
+  if (value !== "all") {
+    const stops = SITE.itinerary.filter((s) => s.date === value);
+    const tally = {};
+    stops.forEach((s) => { tally[s.wx] = (tally[s.wx] || 0) + 1; });
+    const busiest = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (busiest) showForecastFor(busiest);
+  }
   if (scroll) {
     // Land just under the sticky nav rather than at the very top of the page.
     const y = $("#itinerary").getBoundingClientRect().top + window.scrollY - 56;
@@ -249,7 +281,7 @@ function renderItinerary() {
     if (hi) head.append(el("span", "day-wx", `${wxEmoji(hi.short)} ${hi.temp}°F · ${hi.pop}% precip`));
     sec.append(head);
 
-    stops.forEach((s) => sec.append(renderStop(s)));
+    stops.forEach((s, i) => sec.append(renderStop(s, stops[i - 1])));
 
     const events = dayEvents(date);
     if (events) sec.append(events);
@@ -280,8 +312,15 @@ function renderItinerary() {
 function renderForecast(locKey) {
   const host = $("#forecast-body");
   host.innerHTML = "";
-  const periods = (SITE.weather[locKey]?.daily || []).filter((p) => p.day);
-  const nights = (SITE.weather[locKey]?.daily || []).filter((p) => !p.day);
+  const all = SITE.weather[locKey]?.daily || [];
+  const nights = all.filter((p) => !p.day);
+
+  // Days past the drive home are noise while the trip is still on.
+  const end = SITE.trip.end;
+  const tripStillOn = end && todayISO() <= end;
+  const periods = all
+    .filter((p) => p.day)
+    .filter((p) => !tripStillOn || p.start.slice(0, 10) <= end);
 
   periods.forEach((p) => {
     const date = p.start.slice(0, 10);
@@ -308,18 +347,28 @@ function renderForecast(locKey) {
   });
 }
 
+function showForecastFor(locKey) {
+  const tabs = $("#loc-tabs");
+  let found = false;
+  tabs.querySelectorAll("button").forEach((b) => {
+    const on = b.dataset.loc === locKey;
+    b.classList.toggle("is-on", on);
+    b.setAttribute("aria-pressed", String(on));
+    if (on) found = true;
+  });
+  if (found) renderForecast(locKey);
+}
+
 function renderLocTabs() {
   const tabs = $("#loc-tabs");
-  SITE.locations.forEach((loc, i) => {
-    const b = el("button", i === 0 ? "is-on" : null, loc.label);
-    b.onclick = () => {
-      tabs.querySelectorAll("button").forEach((x) => x.classList.remove("is-on"));
-      b.classList.add("is-on");
-      renderForecast(loc.key);
-    };
+  SITE.locations.forEach((loc) => {
+    const b = el("button", null, loc.label);
+    b.dataset.loc = loc.key;
+    b.setAttribute("aria-pressed", "false");
+    b.onclick = () => showForecastFor(loc.key);
     tabs.append(b);
   });
-  renderForecast(SITE.locations[0].key);
+  showForecastFor(SITE.locations[0].key);
 }
 
 // ---------------------------------------------------------------- ideas
@@ -417,44 +466,59 @@ function renderLinks() {
 
 // ---------------------------------------------------------------- photos
 
-async function renderPhotos() {
+/* The photo list rides in the payload rather than coming from the GitHub API.
+   Unauthenticated GitHub allows 60 requests an hour per IP, which a houseful of
+   people on one wifi would burn through, and the gallery would start failing
+   mid-trip. Uploads trigger a rebuild, so this list stays current. */
+function renderPhotos() {
   const hint = $("#photos-hint");
   const host = $("#photos-body");
-  const [owner, repo] = CONFIG.photoRepo.split("/");
-  const api = `https://api.github.com/repos/${owner}/${repo}/contents/${CONFIG.photoDir}?ref=${CONFIG.photoBranch}`;
+  const names = SITE.photos || [];
 
-  let files = [];
-  try {
-    const r = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
-    if (!r.ok) throw new Error(`GitHub API ${r.status}`);
-    files = (await r.json()).filter((f) => f.type === "file" && IMG_RE.test(f.name));
-  } catch (e) {
-    hint.textContent = `Could not load photos (${e.message}).`;
-    return;
-  }
-
-  if (!files.length) {
+  if (!names.length) {
     hint.hidden = true;
     return;
   }
+  hint.textContent = `${names.length} photo${names.length === 1 ? "" : "s"}`;
 
-  // Newest first, assuming the resize workflow's date-prefixed filenames.
-  files.sort((a, b) => b.name.localeCompare(a.name));
-  hint.textContent = `${files.length} photo${files.length === 1 ? "" : "s"}`;
-
-  PHOTOS = files.map((f) => `${CONFIG.photoDir}/${encodeURIComponent(f.name)}`);
+  PHOTOS = names.map((n) => `${CONFIG.photoDir}/${encodeURIComponent(n)}`);
 
   PHOTOS.forEach((src, i) => {
     const img = el("img");
     img.loading = i < 3 ? "eager" : "lazy";
     img.decoding = "async";
     img.src = src;
-    img.alt = files[i].name;
+    img.alt = names[i];
     img.onclick = () => openLightbox(i);
     host.append(img);
   });
 
   wireCarousel(host);
+}
+
+/* Wifi, door code, checkout time. Lives in the encrypted payload, so it is
+   available offline and not sitting in a public file. */
+function renderHouse() {
+  const notes = SITE.house || [];
+  if (!notes.length) return;
+
+  const host = $("#house");
+  const box = el("details", "disclosure");
+  const summary = el("summary");
+  summary.append(el("span", "disclosure-title", "House info"));
+  summary.append(el("span", "disclosure-count", `${notes.length} details`));
+  summary.append(el("span", "disclosure-action"));
+  box.append(summary);
+
+  const body = el("div", "disclosure-body");
+  notes.forEach((n) => {
+    const row = el("div", "house-row");
+    row.append(el("span", "house-label", n.label));
+    row.append(el("span", "house-value", n.value));
+    body.append(row);
+  });
+  box.append(body);
+  host.append(box);
 }
 
 // ---------------------------------------------------------------- uploading
@@ -512,7 +576,7 @@ async function uploadOne(file, pass) {
 async function handleUpload(files) {
   const status = $("#ph-status");
   const track = $("#photos-body");
-  const pass = sessionStorage.getItem("trip-pass");
+  const pass = savedPass();
   if (!pass) { status.textContent = "Unlock the site first."; return; }
 
   let done = 0;
@@ -645,13 +709,21 @@ async function decryptPayload(blob, passphrase) {
 // ---------------------------------------------------------------- render
 
 function renderSite() {
+  // Mid-trip the header shrinks, because what matters then is the next stop,
+  // not a countdown to a trip you are already on.
+  const today = todayISO();
+  if (SITE.trip.start && today >= SITE.trip.start && today <= SITE.trip.end) {
+    document.body.classList.add("is-trip");
+  }
+
   renderCountdown();
+  renderLocTabs();   // before renderItinerary, which points the forecast at a day
   renderItinerary();
   renderNow();
-  renderLocTabs();
   renderIdeas();
   renderEvents();
   renderLinks();
+  renderHouse();
   renderPhotos();
   wireUpload();
 
@@ -669,7 +741,7 @@ function renderSite() {
   wireLightbox();
 
   $("#lock").onclick = () => {
-    sessionStorage.removeItem("trip-pass");
+    forgetPass();
     location.reload();
   };
 
@@ -682,7 +754,7 @@ function renderSite() {
 async function unlock(passphrase) {
   const blob = await (await fetch("data/site.enc.json", { cache: "no-cache" })).json();
   SITE = await decryptPayload(blob, passphrase); // throws on a wrong passphrase
-  sessionStorage.setItem("trip-pass", passphrase);
+  rememberPass(passphrase);
   renderSite();
 }
 
@@ -706,17 +778,29 @@ function wireGate() {
   });
 }
 
+/* Registered regardless of unlock state so the shell is cached before anyone
+   drives into a valley with no signal. */
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((e) => {
+      console.warn("offline support unavailable:", e.message);
+    });
+  });
+}
+
 async function main() {
+  registerServiceWorker();
   wireGate();
 
   // Stay unlocked while the tab lives, so a refresh does not re-prompt.
-  const saved = sessionStorage.getItem("trip-pass");
+  const saved = savedPass();
   if (saved) {
     try {
       await unlock(saved);
       return;
     } catch {
-      sessionStorage.removeItem("trip-pass");
+      forgetPass();
     }
   }
   $("#gate-input").focus();

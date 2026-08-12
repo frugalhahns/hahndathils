@@ -168,6 +168,11 @@ def fetch_itinerary():
             f"{date}|{hhmm}|{activity}".encode("utf-8")
         ).hexdigest()[:10]
 
+        # Short notes are things like "35 mins from Airbnb" or "Option 1", which
+        # are worth seeing without tapping. Long ones stay behind a toggle.
+        one_line = "\n" not in notes and len(notes) <= 45
+        hint = notes if one_line else ""
+
         items.append({
             "id": item_id,
             "date": date,
@@ -175,7 +180,8 @@ def fetch_itinerary():
             "timeLabel": label,
             "activity": activity,
             "type": (row.get("Type") or "").strip(),
-            "notes": notes,
+            "hint": hint,
+            "notes": "" if one_line else notes,
             "town": ", ".join(x for x in (town, state) if x),
             "wx": loc_key_for(town, location, activity),
             # Public link only. Airbnb URL is held back for the encrypted blob.
@@ -352,6 +358,31 @@ def write_encrypted(payload, passphrase, path):
 
 
 # --------------------------------------------------------------------------
+# photos
+# --------------------------------------------------------------------------
+
+PHOTO_RE = re.compile(r"\.(jpe?g|png|gif|webp|avif)$", re.I)
+
+
+def list_photos():
+    """Inventory photos/ so the page never has to call the GitHub API.
+
+    Unauthenticated GitHub allows 60 requests per hour per IP. A houseful of
+    people on one wifi shares that, and each page load would spend one, so the
+    gallery would start 403ing partway through the trip. Uploads trigger a
+    build anyway, so this list is never more than a build behind.
+    """
+    photo_dir = os.path.join(ROOT, "photos")
+    try:
+        names = [n for n in os.listdir(photo_dir) if PHOTO_RE.search(n)]
+    except FileNotFoundError:
+        return []
+    names.sort(reverse=True)  # filenames are timestamped, so this is newest first
+    print(f"  {len(names)} photos")
+    return names
+
+
+# --------------------------------------------------------------------------
 # ideas
 # --------------------------------------------------------------------------
 
@@ -376,7 +407,8 @@ def prune_ideas(ideas, items):
     all of them keeps near-misses like Cortland Beer vs Ithaca Beer separate.
     """
     haystacks = [
-        f"{i['activity']} {i['notes']} {i['_location']}".lower() for i in items
+        f"{i['activity']} {i['hint']} {i['notes']} {i['_location']}".lower()
+        for i in items
     ]
 
     def already_planned(idea):
@@ -459,6 +491,17 @@ def main():
         ideas = prune_ideas(json.load(f), items)
     print(f"  {len(ideas)} suggestions remain")
 
+    print("photos...")
+    photos = list_photos()
+
+    # Wifi password, door code, checkout time. Optional; renders only if filled.
+    house = []
+    house_path = os.path.join(ROOT, "scripts", "house.json")
+    if os.path.exists(house_path):
+        with open(house_path) as f:
+            house = [h for h in json.load(f) if h.get("value")]
+    print(f"  {len(house)} house notes")
+
     stops = []
     for i in items:
         stop = {k: v for k, v in i.items() if not k.startswith("_")}
@@ -478,6 +521,8 @@ def main():
         "events": events,
         "ideas": ideas,
         "links": links,
+        "photos": photos,
+        "house": house,
     }
 
     write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))

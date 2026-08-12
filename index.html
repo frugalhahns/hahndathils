@@ -6,8 +6,7 @@
 <meta name="theme-color" content="#12161b">
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
-<link rel="preconnect" href="https://api.github.com">
-<link rel="stylesheet" href="assets/style.css?v=21be2c35">
+<link rel="stylesheet" href="assets/style.css?v=030f62f2">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -44,10 +43,26 @@
   <section id="itinerary" class="section">
     <h2>Itinerary</h2>
     <div id="days"></div>
+    <div id="house"></div>
+  </section>
+
+  <section id="photos" class="section">
+    <div class="section-head">
+      <h2>Photos</h2>
+      <button id="ph-add" class="btn btn-add">+ Add photos</button>
+      <div id="ph-arrows" class="ph-arrows" hidden>
+        <button id="ph-prev" aria-label="Previous photos">‹</button>
+        <button id="ph-next" aria-label="More photos">›</button>
+      </div>
+    </div>
+    <input type="file" id="ph-input" accept="image/*" multiple hidden>
+    <p class="muted" id="ph-status" hidden></p>
+    <p class="muted" id="photos-hint">Loading…</p>
+    <div id="photos-body" class="gallery"></div>
   </section>
 
   <section id="forecast" class="section">
-    <h2>7-day forecast</h2>
+    <h2>Forecast</h2>
     <div class="loc-tabs" id="loc-tabs"></div>
     <div id="forecast-body"></div>
   </section>
@@ -72,21 +87,6 @@
     <div id="events-leftover"></div>
   </section>
 
-  <section id="photos" class="section">
-    <div class="section-head">
-      <h2>Photos</h2>
-      <button id="ph-add" class="btn btn-add">+ Add photos</button>
-      <div id="ph-arrows" class="ph-arrows" hidden>
-        <button id="ph-prev" aria-label="Previous photos">‹</button>
-        <button id="ph-next" aria-label="More photos">›</button>
-      </div>
-    </div>
-    <input type="file" id="ph-input" accept="image/*" multiple hidden>
-    <p class="muted" id="ph-status" hidden></p>
-    <p class="muted" id="photos-hint">Loading…</p>
-    <div id="photos-body" class="gallery"></div>
-  </section>
-
 </main>
 
 <footer class="wrap foot">
@@ -104,6 +104,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=775f00da" type="module"></script>
+<script src="assets/app.js?v=c26e2dac" type="module"></script>
 </body>
 </html>
