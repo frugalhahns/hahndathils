@@ -1,6 +1,8 @@
 // Hahndathils trip site. No framework, no build step.
 // Decrypts data/site.enc.json in the browser once the passphrase is entered.
 
+import { initSparkles } from "./sparkle.js?v=211e46b1";
+
 const CONFIG = {
   photoDir: "photos",
   // Cloudflare Worker that accepts uploads and commits them to the repo, so
@@ -927,6 +929,7 @@ function registerServiceWorker() {
 
 async function main() {
   registerServiceWorker();
+  initSparkles();
   wireGate();
 
   // Stay unlocked while the tab lives, so a refresh does not re-prompt.

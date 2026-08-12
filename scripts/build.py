@@ -469,6 +469,33 @@ def prune_ideas(ideas, items):
 ASSET_RE = re.compile(r'(assets/(?:app\.js|style\.css))(\?v=[0-9a-f]+)?')
 
 
+def digest(rel):
+    with open(os.path.join(ROOT, rel), "rb") as f:
+        return hashlib.sha1(f.read()).hexdigest()[:8]
+
+
+def version_imports():
+    """Stamp modules that app.js imports, which index.html never mentions.
+
+    The service worker caches /assets/ cache-first, so an unversioned import
+    would be pinned forever on a device that already has it. Runs before the
+    index.html pass, since changing app.js changes its own hash.
+    """
+    app_path = os.path.join(ROOT, "assets", "app.js")
+    with open(app_path) as f:
+        src = f.read()
+
+    updated = re.sub(
+        r'(\./sparkle\.js)(\?v=[0-9a-f]+)?',
+        lambda m: f"./sparkle.js?v={digest('assets/sparkle.js')}",
+        src,
+    )
+    if updated != src:
+        with open(app_path, "w") as f:
+            f.write(updated)
+        print("  stamped module imports in app.js")
+
+
 def version_assets():
     """Stamp a content hash onto the asset URLs in index.html.
 
@@ -477,15 +504,14 @@ def version_assets():
     after a deploy. The hash only moves when the file's bytes move, so this is
     idempotent and does not churn the diff on unrelated builds.
     """
+    version_imports()
     html_path = os.path.join(ROOT, "index.html")
     with open(html_path) as f:
         html = f.read()
 
     def stamp(m):
         rel = m.group(1)
-        with open(os.path.join(ROOT, rel), "rb") as f:
-            digest = hashlib.sha1(f.read()).hexdigest()[:8]
-        return f"{rel}?v={digest}"
+        return f"{rel}?v={digest(rel)}"
 
     updated = ASSET_RE.sub(stamp, html)
     if updated != html:

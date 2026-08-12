@@ -495,6 +495,21 @@ a.stay-value { display: inline-block; }
 .is-trip .hero h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); }
 .is-trip .hero .unlock { margin-top: 10px; }
 
+/* ---------- sparkles ---------- */
+.sparkle-layer {
+  position: fixed; inset: 0;
+  z-index: 900;
+  pointer-events: none;   /* must never swallow a tap */
+  overflow: hidden;
+}
+.sparkle {
+  position: absolute;
+  display: block;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%,
+                     50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  will-change: transform, opacity;
+}
+
 /* ---------- accessibility ---------- */
 :focus-visible {
   outline: 2px solid var(--accent);
