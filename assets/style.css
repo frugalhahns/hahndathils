@@ -263,14 +263,41 @@ a { color: var(--accent); }
 }
 .event-list { margin-top: 18px; }
 .event { padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .87rem; }
+.event-note { margin-top: 3px; font-size: .82rem; color: var(--ink-2); }
 
 /* ---------- photos ---------- */
-.gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.section-head { display: flex; align-items: center; gap: 12px; }
+.section-head h2 { margin-bottom: .4em; }
+.ph-arrows { margin-left: auto; display: flex; gap: 6px; }
+.ph-arrows button {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--line);
+  color: var(--ink); font-size: 1.1rem; line-height: 1; cursor: pointer;
+}
+.ph-arrows button:disabled { opacity: .3; cursor: default; }
+
+/* Swipeable strip. Full-bleed on phones so the next photo peeks in. */
+.gallery {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.gallery::-webkit-scrollbar { display: none; }
 .gallery img {
-  width: 100%; aspect-ratio: 1; object-fit: cover;
+  flex: 0 0 auto;
+  width: 78%; max-width: 300px;
+  aspect-ratio: 4 / 3; object-fit: cover;
+  scroll-snap-align: start;
   border-radius: 10px; cursor: pointer; background: var(--card);
   border: 1px solid var(--line);
 }
+@media (min-width: 620px) {
+  .gallery img { width: 240px; }
+}
+
 .lightbox {
   position: fixed; inset: 0; z-index: 90;
   background: var(--overlay);
@@ -280,6 +307,26 @@ a { color: var(--accent); }
 .lb-close {
   position: absolute; top: 14px; right: 16px;
   background: none; border: 0; color: #fff; font-size: 1.6rem; cursor: pointer;
+  z-index: 2;
+}
+.lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  border: 0; color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.lb-nav:hover { background: rgba(255, 255, 255, .22); }
+.lb-prev { left: 12px; }
+.lb-next { right: 12px; }
+.lb-count {
+  position: absolute; bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%);
+  color: rgba(255, 255, 255, .75); font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 560px) {
+  /* Swipe handles this on touch, so the arrows just cover the photo. */
+  .lb-nav { display: none; }
 }
 
 /* ---------- buttons ---------- */

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12161b">
 <meta name="robots" content="noindex, nofollow">
-<title>Hahndathils · Ithaca &amp; Cortland</title>
+<title>Hahndathils Trip · Ithaca &amp; Cortland</title>
 <link rel="preconnect" href="https://api.github.com">
-<link rel="stylesheet" href="assets/style.css?v=7ff58e19">
+<link rel="stylesheet" href="assets/style.css?v=22d5d437">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -15,7 +15,7 @@
 <div id="gate" class="gate">
   <form id="gate-form" class="gate-box">
     <p class="kicker">Ithaca &amp; Cortland, New York</p>
-    <h1>Hahndathils</h1>
+    <h1>Hahndathils Trip</h1>
     <input type="password" id="gate-input" placeholder="passphrase"
            autocomplete="current-password" autocapitalize="off"
            autocorrect="off" spellcheck="false" required>
@@ -29,7 +29,7 @@
 <header class="hero">
   <div class="wrap">
     <p class="kicker">Ithaca &amp; Cortland, New York</p>
-    <h1>Hahndathils</h1>
+    <h1>Hahndathils Trip</h1>
     <p id="countdown" class="countdown">…</p>
     <button id="lock" class="unlock">🔓 Lock again</button>
   </div>
@@ -65,7 +65,13 @@
   </section>
 
   <section id="photos" class="section">
-    <h2>Photos</h2>
+    <div class="section-head">
+      <h2>Photos</h2>
+      <div id="ph-arrows" class="ph-arrows" hidden>
+        <button id="ph-prev" aria-label="Previous photos">‹</button>
+        <button id="ph-next" aria-label="More photos">›</button>
+      </div>
+    </div>
     <p class="muted" id="photos-hint">Loading…</p>
     <div id="photos-body" class="gallery"></div>
   </section>
@@ -81,9 +87,12 @@
 
 <div id="lightbox" class="lightbox" hidden>
   <button class="lb-close" aria-label="Close">✕</button>
+  <button id="lb-prev" class="lb-nav lb-prev" aria-label="Previous photo">‹</button>
   <img id="lb-img" alt="">
+  <button id="lb-next" class="lb-nav lb-next" aria-label="Next photo">›</button>
+  <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=00bfb174" type="module"></script>
+<script src="assets/app.js?v=4976f62c" type="module"></script>
 </body>
 </html>

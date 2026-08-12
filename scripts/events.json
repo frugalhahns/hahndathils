@@ -1,0 +1,68 @@
+[
+  {
+    "name": "Cortland Community Beach Party",
+    "date": "2026-08-13",
+    "time": "17:00",
+    "venue": "Yaman Park",
+    "town": "Cortland",
+    "note": "Free. 35+ community groups, swimming, food.",
+    "url": "https://www.experiencecortland.com/events"
+  },
+  {
+    "name": "Summer Concert Series: Molly & The Ringwalds",
+    "date": "2026-08-13",
+    "time": "19:00",
+    "venue": "Suggett Park",
+    "town": "Cortland",
+    "note": "Free. Last night of the summer series.",
+    "url": "https://www.experiencecortland.com/events/summer-concert-series"
+  },
+  {
+    "name": "34th Annual Ithaca Artist Market",
+    "date": "2026-08-14",
+    "venue": "Ithaca Farmers Market, Steamboat Landing",
+    "town": "Ithaca",
+    "note": "Local makers take over the market pavilion.",
+    "url": "https://www.visitithaca.com/events/event-calendar/"
+  },
+  {
+    "name": "Devon Allman: 20 Years Strong Tour",
+    "date": "2026-08-14",
+    "venue": "Homer, NY",
+    "town": "Homer",
+    "note": "Ticketed. 15 min from the Airbnb.",
+    "url": "https://www.experiencecortland.com/events"
+  },
+  {
+    "name": "56th Annual Eastern States Regional Watch & Clock Show",
+    "date": "2026-08-14",
+    "venue": "Cortland, NY",
+    "town": "Cortland",
+    "note": "Oddly specific, genuinely fun.",
+    "url": "https://www.experiencecortland.com/events"
+  },
+  {
+    "name": "Cortland Farmers Market",
+    "date": "2026-08-15",
+    "venue": "Downtown Cortland",
+    "town": "Cortland",
+    "note": "Runs Saturdays through October.",
+    "url": "https://www.experiencecortland.com/events"
+  },
+  {
+    "name": "2026 Farm Show",
+    "date": "2026-08-15",
+    "venue": "Cortland, NY",
+    "town": "Cortland",
+    "url": "https://www.experiencecortland.com/events"
+  },
+  {
+    "name": "PorchFest Cortland",
+    "date": "2026-08-16",
+    "time": "12:00",
+    "venue": "Van Hoesen St neighborhood",
+    "town": "Cortland",
+    "note": "Free. Porches become stages across Van Hoesen, Chestnut, Harrison, Joy, and Hamlin. Kids parade and bagpipes at noon, music until 5.",
+    "url": "https://www.experiencecortland.com/events/porchfest-cortland-4"
+  }
+]

@@ -17,7 +17,9 @@ const el = (tag, cls, text) => {
   return n;
 };
 
-let SITE = null; // populated only after a successful unlock
+let SITE = null;      // populated only after a successful unlock
+let PHOTOS = [];      // image URLs, in gallery order
+let LB_INDEX = 0;     // which one the lightbox is showing
 
 // ---------------------------------------------------------------- helpers
 
@@ -56,6 +58,13 @@ const shortDay = (iso) =>
 
 function daysBetween(aISO, bISO) {
   return Math.round((localDate(bISO) - localDate(aISO)) / 86400000);
+}
+
+// '19:00' -> '7:00 PM'
+function parseTimeLabel(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date(2000, 0, 1, h, m);
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 function mapsUrl(query) {
@@ -337,7 +346,10 @@ function renderEvents() {
     const a = el("a", null, e.name);
     a.href = e.url; a.target = "_blank"; a.rel = "noopener";
     row.append(a);
-    row.append(el("div", "muted", `${e.date}${e.time ? " " + e.time : ""} · ${e.venue}, ${e.town}`));
+    const when = localDate(e.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    const time = e.time ? " · " + parseTimeLabel(e.time) : "";
+    row.append(el("div", "muted", `${when}${time} · ${e.venue}${e.town ? ", " + e.town : ""}`));
+    if (e.note) row.append(el("div", "event-note", e.note));
     host.append(row);
   });
 }
@@ -386,20 +398,78 @@ async function renderPhotos() {
     `${files.length} photo${files.length === 1 ? "" : "s"} · ` +
     `<a href="${uploadUrl(owner, repo)}" target="_blank" rel="noopener">add more</a>`;
 
-  files.forEach((f) => {
+  PHOTOS = files.map((f) => `${CONFIG.photoDir}/${encodeURIComponent(f.name)}`);
+
+  PHOTOS.forEach((src, i) => {
     const img = el("img");
-    img.loading = "lazy";
+    img.loading = i < 3 ? "eager" : "lazy";
     img.decoding = "async";
-    img.src = `${CONFIG.photoDir}/${encodeURIComponent(f.name)}`;
-    img.alt = f.name;
-    img.onclick = () => openLightbox(img.src);
+    img.src = src;
+    img.alt = files[i].name;
+    img.onclick = () => openLightbox(i);
     host.append(img);
   });
+
+  wireCarousel(host);
 }
 
-function openLightbox(src) {
-  $("#lb-img").src = src;
+function wireCarousel(track) {
+  const scrollBy = (dir) => {
+    const step = track.querySelector("img")?.getBoundingClientRect().width || 260;
+    track.scrollBy({ left: dir * (step + 10), behavior: "smooth" });
+  };
+  $("#ph-prev").onclick = () => scrollBy(-1);
+  $("#ph-next").onclick = () => scrollBy(1);
+
+  // Hide the arrows when there is nothing left to scroll toward.
+  const sync = () => {
+    const max = track.scrollWidth - track.clientWidth - 2;
+    $("#ph-prev").disabled = track.scrollLeft <= 2;
+    $("#ph-next").disabled = track.scrollLeft >= max;
+    $("#ph-arrows").hidden = max <= 0;
+  };
+  track.addEventListener("scroll", sync, { passive: true });
+  sync();
+}
+
+// ---------------------------------------------------------------- lightbox
+
+function openLightbox(i) {
+  LB_INDEX = i;
+  $("#lb-img").src = PHOTOS[i];
+  $("#lb-count").textContent = `${i + 1} / ${PHOTOS.length}`;
   $("#lightbox").hidden = false;
+}
+
+function stepLightbox(delta) {
+  if (!PHOTOS.length) return;
+  openLightbox((LB_INDEX + delta + PHOTOS.length) % PHOTOS.length);
+}
+
+function wireLightbox() {
+  const lb = $("#lightbox");
+
+  // Clicking the backdrop closes; clicking a control or the photo does not.
+  lb.onclick = (ev) => { if (ev.target === lb) lb.hidden = true; };
+  $(".lb-close").onclick = () => { lb.hidden = true; };
+  $("#lb-prev").onclick = () => stepLightbox(-1);
+  $("#lb-next").onclick = () => stepLightbox(1);
+
+  document.addEventListener("keydown", (ev) => {
+    if (lb.hidden) return;
+    if (ev.key === "Escape") lb.hidden = true;
+    if (ev.key === "ArrowLeft") stepLightbox(-1);
+    if (ev.key === "ArrowRight") stepLightbox(1);
+  });
+
+  let startX = null;
+  lb.addEventListener("touchstart", (ev) => { startX = ev.touches[0].clientX; }, { passive: true });
+  lb.addEventListener("touchend", (ev) => {
+    if (startX === null) return;
+    const dx = ev.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 45) stepLightbox(dx < 0 ? 1 : -1);
+    startX = null;
+  }, { passive: true });
 }
 
 // ---------------------------------------------------------------- unlock
@@ -446,8 +516,7 @@ function renderSite() {
     };
   });
 
-  const lb = $("#lightbox");
-  lb.onclick = () => { lb.hidden = true; };
+  wireLightbox();
 
   $("#lock").onclick = () => {
     sessionStorage.removeItem("trip-pass");

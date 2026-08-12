@@ -247,10 +247,33 @@ def fetch_weather():
 # events (optional)
 # --------------------------------------------------------------------------
 
+def curated_events(trip_end):
+    """Hand-checked local listings from scripts/events.json.
+
+    Ticketmaster only carries ticketed shows, which misses the things this area
+    actually does on a summer weekend: porchfests, farmers markets, free concerts
+    in a park. Those get listed by hand.
+    """
+    path = os.path.join(ROOT, "scripts", "events.json")
+    try:
+        with open(path) as f:
+            events = json.load(f)
+    except Exception as e:
+        print(f"  ! could not read events.json: {e}", file=sys.stderr)
+        return []
+
+    today = datetime.now().date().isoformat()
+    horizon = max(trip_end or today,
+                  (datetime.now() + timedelta(days=7)).date().isoformat())
+    keep = [e for e in events if today <= e.get("date", "") <= horizon]
+    print(f"  curated events: {len(keep)} of {len(events)} inside the window")
+    return keep
+
+
 def fetch_events():
     key = os.environ.get("TICKETMASTER_KEY", "").strip()
     if not key:
-        print("  events: no TICKETMASTER_KEY, skipping")
+        print("  ticketmaster: no key, skipping")
         return []
     now = datetime.now(timezone.utc)
     params = urllib.parse.urlencode({
@@ -319,6 +342,52 @@ def write_encrypted(payload, passphrase, path):
 
 
 # --------------------------------------------------------------------------
+# ideas
+# --------------------------------------------------------------------------
+
+# Words too generic to identify a place on their own. Without this,
+# "Cortland Beer Company" would match the itinerary's "Ithaca Beer Company".
+IDEA_STOPWORDS = {
+    "the", "of", "and", "at", "a", "an", "state", "park", "trail", "co",
+    "annual", "st", "nature", "center",
+}
+
+
+def significant(name):
+    words = re.findall(r"[a-z0-9]+", name.lower())
+    return [w for w in words if w not in IDEA_STOPWORDS]
+
+
+def prune_ideas(ideas, items):
+    """Drop suggestions for places already on the itinerary.
+
+    An idea counts as a duplicate when every distinctive word of its name (or of
+    one side of a 'X / Y' name) shows up in a single itinerary entry. Requiring
+    all of them keeps near-misses like Cortland Beer vs Ithaca Beer separate.
+    """
+    haystacks = [
+        f"{i['activity']} {i['notes']} {i['_location']}".lower() for i in items
+    ]
+
+    def already_planned(idea):
+        for variant in idea["name"].split("/"):
+            tokens = significant(variant)
+            if tokens and any(all(t in hay for t in tokens) for hay in haystacks):
+                return True
+        return False
+
+    kept, dropped = [], []
+    for idea in ideas:
+        (dropped if already_planned(idea) else kept).append(idea)
+
+    if dropped:
+        print(f"  dropped {len(dropped)} ideas already on the itinerary:")
+        for idea in dropped:
+            print(f"    - {idea['name']}")
+    return kept
+
+
+# --------------------------------------------------------------------------
 # cache busting
 # --------------------------------------------------------------------------
 
@@ -369,13 +438,17 @@ def main():
     print("weather...")
     weather = fetch_weather()
 
-    print("events...")
-    events = fetch_events()
-
-    with open(os.path.join(ROOT, "scripts", "ideas.json")) as f:
-        ideas = json.load(f)
-
     dates = sorted({i["date"] for i in items})
+
+    print("events...")
+    events = curated_events(dates[-1] if dates else None) + fetch_events()
+    events.sort(key=lambda e: (e.get("date", ""), e.get("time", "")))
+
+    print("ideas...")
+    with open(os.path.join(ROOT, "scripts", "ideas.json")) as f:
+        ideas = prune_ideas(json.load(f), items)
+    print(f"  {len(ideas)} suggestions remain")
+
     stops = []
     for i in items:
         stop = {k: v for k, v in i.items() if not k.startswith("_")}
