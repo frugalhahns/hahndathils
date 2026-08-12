@@ -942,6 +942,60 @@ function renderSite() {
 
 // ---------------------------------------------------------------- boot
 
+/* The now card is computed once at render, so an open tab would sit on the
+   morning's hour all day. These keep it honest without a manual reload. */
+const TICK_MS = 2 * 60 * 1000;      // recompute "up next" and the current hour
+const REFETCH_MS = 30 * 60 * 1000;  // pull a newer payload if the build ran
+
+let lastFetch = Date.now();
+
+async function refreshPayload() {
+  if (!SITE) return;
+  try {
+    const res = await fetch("data/site.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const fresh = await res.json();
+    lastFetch = Date.now();
+    if (fresh.generated === SITE.generated) return;  // same build, nothing to do
+
+    SITE = fresh;
+    renderCountdown();
+    renderNow();
+    $("#generated").textContent =
+      "Updated " + new Date(SITE.generated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    // Offline. The cached payload stays on screen.
+  }
+}
+
+function startAutoRefresh() {
+  setInterval(() => {
+    renderCountdown();
+    renderNow();
+  }, TICK_MS);
+
+  setInterval(refreshPayload, REFETCH_MS);
+
+  // Coming back to a backgrounded tab is the case that matters most: the phone
+  // was in a pocket for hours and the timers above were throttled or frozen.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    renderCountdown();
+    renderNow();
+    if (Date.now() - lastFetch > REFETCH_MS) refreshPayload();
+  });
+}
+
+/* Caches the shell up front so the site opens in a gorge with no signal. */
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((e) => {
+      console.warn("offline support unavailable:", e.message);
+    });
+  });
+}
+
 async function main() {
   registerServiceWorker();
   initSparkles();
