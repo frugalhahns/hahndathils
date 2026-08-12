@@ -234,12 +234,22 @@ function renderStop(stop, prev) {
    hides the day tabs, which mean nothing while you are reading a door code. */
 function setView(view) {
   const staying = view === "stay";
+  const quoting = view === "quotes";
+  const trip = !staying && !quoting;
 
   $("#stay").hidden = !staying;
-  $("#days").hidden = staying;
-  $("#daynav").hidden = staying;
+  $("#quotes").hidden = !quoting;
+  $("#days").hidden = !trip;
+  $("#daynav").hidden = !trip;
   $("#itinerary-title").textContent =
-    staying ? "Where we're staying" : "Flexible itinerary";
+    staying ? "Where we're staying" : quoting ? "Things we said" : "Flexible itinerary";
+
+  // The rest of the page is about the trip, so it only belongs on that view.
+  ["#now", "#photos", "#forecast", "#ideas"].forEach((sel) => {
+    const n = $(sel);
+    // Never unhide the now card if it never got any content.
+    if (n) n.hidden = !trip || (sel === "#now" && !n.children.length);
+  });
 
   document.querySelectorAll("#viewbar button").forEach((b) => {
     const on = b.dataset.view === view;
@@ -250,9 +260,82 @@ function setView(view) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* Funny things people said, newest first, grouped under whatever the person
+   typed in the "when" box so old memories can sit alongside this trip. */
+function renderQuotes() {
+  const host = $("#quotes-list");
+  host.innerHTML = "";
+  const quotes = SITE.quotes || [];
+
+  if (!quotes.length) {
+    host.append(el("p", "muted", "Nothing yet. Add the first one above."));
+    return;
+  }
+
+  let lastGroup = null;
+  quotes.forEach((q) => {
+    const group = q.when || (q.added ? new Date(q.added).getFullYear() : "");
+    if (group && group !== lastGroup) {
+      host.append(el("div", "quote-group", String(group)));
+      lastGroup = group;
+    }
+    const card = el("blockquote", "quote");
+    card.append(el("p", "quote-text", q.text));
+    if (q.who) card.append(el("footer", "quote-who", q.who));
+    host.append(card);
+  });
+}
+
+function wireQuoteForm() {
+  const form = $("#quote-form");
+  const status = $("#quote-status");
+  if (!CONFIG.uploadUrl) { form.hidden = true; return; }
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const text = $("#q-text").value.trim();
+    if (!text) return;
+
+    const btn = $("#q-save");
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    status.hidden = true;
+
+    const quote = {
+      text,
+      who: $("#q-who").value.trim(),
+      when: $("#q-when").value.trim(),
+      added: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch(CONFIG.uploadUrl.replace(/\/upload$/, "/quote"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...quote, pass: savedPass() }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || `save failed (${res.status})`);
+      }
+      // Show it straight away; the build republishes it a minute or two later.
+      SITE.quotes.unshift(quote);
+      renderQuotes();
+      form.reset();
+      status.textContent = "Saved. Everyone sees it in a minute or two.";
+      status.hidden = false;
+    } catch (e) {
+      status.textContent = `Could not save: ${e.message}`;
+      status.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add quote";
+    }
+  });
+}
+
 function wireViewBar() {
   const bar = $("#viewbar");
-  if (!SITE.stay?.length) { bar.hidden = true; return; }
   bar.hidden = false;
   bar.querySelectorAll("button").forEach((b) => {
     b.onclick = () => setView(b.dataset.view);
@@ -864,6 +947,8 @@ function renderSite() {
   renderEvents();
   renderLinks();
   renderStay();
+  renderQuotes();
+  wireQuoteForm();
   wireViewBar();
   renderPhotos();
   wireUpload();

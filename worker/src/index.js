@@ -56,10 +56,8 @@ function buildName(takenISO) {
   return `photo-${stamp}-${rand}.jpg`;
 }
 
-async function commitFile(env, name, base64) {
-  const url =
-    `https://api.github.com/repos/${env.REPO}/contents/` +
-    `${env.PHOTO_DIR}/${encodeURIComponent(name)}`;
+async function commitFile(env, path, base64) {
+  const url = `https://api.github.com/repos/${env.REPO}/contents/${path}`;
 
   // Two people uploading at once can race on the branch head. Creating a new
   // path never needs a base SHA, so a retry is enough to settle it.
@@ -73,19 +71,49 @@ async function commitFile(env, name, base64) {
         "User-Agent": "hahndathils-upload-worker",
       },
       body: JSON.stringify({
-        message: `photo: ${name}`,
+        message: `add: ${path}`,
         content: base64,
         branch: env.BRANCH,
       }),
     });
 
-    if (res.ok) return { ok: true, name };
+    if (res.ok) return { ok: true, path };
     if (res.status !== 409 && res.status !== 422) {
       return { ok: false, status: res.status, detail: await res.text() };
     }
     await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
   }
   return { ok: false, status: 409, detail: "branch kept moving under us" };
+}
+
+/* One file per quote, so two people adding at the same time cannot clobber
+   each other. Appending to a single JSON array would need a read, a merge, and
+   a write against a moving branch. */
+async function saveQuote(env, body, origin) {
+  const text = String(body.text || "").trim();
+  const who = String(body.who || "").trim();
+  const when = String(body.when || "").trim();
+
+  if (!text) return json({ error: "no quote" }, 400, origin);
+  if (text.length > 600 || who.length > 60 || when.length > 40) {
+    return json({ error: "too long" }, 413, origin);
+  }
+
+  const record = { text, who, when, added: new Date().toISOString() };
+  const stamp = record.added.replace(/[:.]/g, "-");
+  const rand = Math.random().toString(36).slice(2, 8);
+  const path = `quotes/${stamp}-${rand}.json`;
+
+  // btoa is latin1 only, so encode to UTF-8 bytes first or an emoji breaks it.
+  const bytes = new TextEncoder().encode(JSON.stringify(record, null, 1));
+  const base64 = btoa(String.fromCharCode(...bytes));
+
+  const result = await commitFile(env, path, base64);
+  if (!result.ok) {
+    console.error("quote commit failed", result.status, result.detail);
+    return json({ error: "could not save quote" }, 502, origin);
+  }
+  return json({ ok: true }, 200, origin);
 }
 
 export default {
@@ -96,7 +124,9 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
-    if (pathname !== "/upload" || request.method !== "POST") {
+    const isUpload = pathname === "/upload";
+    const isQuote = pathname === "/quote";
+    if ((!isUpload && !isQuote) || request.method !== "POST") {
       return json({ error: "not found" }, 404, origin);
     }
 
@@ -110,6 +140,8 @@ export default {
     if (!safeEqual(body.pass, env.TRIP_PASSPHRASE)) {
       return json({ error: "wrong passphrase" }, 401, origin);
     }
+    if (isQuote) return saveQuote(env, body, origin);
+
     if (typeof body.data !== "string" || !body.data) {
       return json({ error: "no image data" }, 400, origin);
     }
@@ -119,7 +151,7 @@ export default {
     }
 
     const name = buildName(body.taken);
-    const result = await commitFile(env, name, body.data);
+    const result = await commitFile(env, `${env.PHOTO_DIR}/${encodeURIComponent(name)}`, body.data);
     if (!result.ok) {
       console.error("commit failed", result.status, result.detail);
       return json({ error: "could not save photo" }, 502, origin);

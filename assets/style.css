@@ -543,6 +543,70 @@ a.stay-value { display: inline-block; }
 .is-trip .hero { padding: 22px 0 18px; }
 .is-trip .hero .unlock { margin-top: 10px; }
 
+/* ---------- quotes ---------- */
+.quote-form {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: var(--space-block);
+}
+.quote-form textarea,
+.quote-form input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  font: inherit;
+  padding: 10px 12px;
+}
+.quote-form textarea {
+  font-family: var(--font-script);
+  font-size: 1.4rem;
+  line-height: 1.25;
+  resize: vertical;
+}
+.quote-form textarea:focus,
+.quote-form input:focus { outline: none; border-color: var(--accent); }
+.quote-fields {
+  display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.quote-fields input { flex: 1 1 150px; width: auto; font-size: .9rem; }
+.quote-fields .btn { flex: 0 0 auto; }
+
+.quote-group {
+  margin: var(--space-block) 0 12px;
+  font-family: var(--font-label);
+  font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent);
+}
+.quote-group:first-child { margin-top: 0; }
+
+.quote {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-2);
+  border-radius: 4px var(--radius) var(--radius) 4px;
+}
+.quote-text {
+  margin: 0;
+  font-family: var(--font-script);
+  font-size: 1.55rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.quote-text::before { content: "\201C"; }
+.quote-text::after { content: "\201D"; }
+.quote-who {
+  margin-top: 6px;
+  font-size: .82rem;
+  font-style: italic;
+  color: var(--ink-2);
+}
+
 /* ---------- sparkles ---------- */
 .sparkle-layer {
   position: fixed; inset: 0;

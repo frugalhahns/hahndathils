@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#12161b">
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
-<link rel="stylesheet" href="assets/style.css?v=9e53a073">
+<link rel="stylesheet" href="assets/style.css?v=d822c53b">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -44,6 +44,20 @@
     <h2 id="itinerary-title">Flexible itinerary</h2>
     <div id="days"></div>
     <div id="stay" hidden></div>
+
+    <div id="quotes" hidden>
+      <form id="quote-form" class="quote-form">
+        <textarea id="q-text" rows="2" maxlength="600" required
+                  placeholder="What did someone say?"></textarea>
+        <div class="quote-fields">
+          <input id="q-who" maxlength="60" placeholder="Who said it">
+          <input id="q-when" maxlength="40" placeholder="When (e.g. Summer 2022)">
+          <button type="submit" id="q-save" class="btn">Add quote</button>
+        </div>
+        <p id="quote-status" class="muted" hidden></p>
+      </form>
+      <div id="quotes-list"></div>
+    </div>
   </section>
 
   <section id="photos" class="section">
@@ -99,6 +113,7 @@
 <nav id="viewbar" class="viewbar" hidden aria-label="Section">
   <button data-view="trip" class="is-on" aria-pressed="true">Trip</button>
   <button data-view="stay" aria-pressed="false">🏠 Stay</button>
+  <button data-view="quotes" aria-pressed="false">💬 Quotes</button>
 </nav>
 
 <div id="lightbox" class="lightbox" hidden>
@@ -109,6 +124,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=ed241805" type="module"></script>
+<script src="assets/app.js?v=738455e5" type="module"></script>
 </body>
 </html>

@@ -391,6 +391,46 @@ def fetch_stay():
 
 
 # --------------------------------------------------------------------------
+# quotes
+# --------------------------------------------------------------------------
+
+def load_quotes():
+    """Funny things people said, one JSON file each under quotes/.
+
+    A file per quote rather than one growing array: two people adding at the
+    same moment would otherwise need a read, merge, and write against a branch
+    that is moving under them.
+    """
+    folder = os.path.join(ROOT, "quotes")
+    out = []
+    try:
+        names = sorted(os.listdir(folder))
+    except FileNotFoundError:
+        return out
+
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(folder, name)) as f:
+                q = json.load(f)
+        except Exception as e:
+            print(f"  ! skipping {name}: {e}", file=sys.stderr)
+            continue
+        if q.get("text"):
+            out.append({
+                "text": q["text"],
+                "who": q.get("who", ""),
+                "when": q.get("when", ""),
+                "added": q.get("added", ""),
+            })
+
+    out.sort(key=lambda q: q.get("added", ""), reverse=True)
+    print(f"  {len(out)} quotes")
+    return out
+
+
+# --------------------------------------------------------------------------
 # photos
 # --------------------------------------------------------------------------
 
@@ -556,6 +596,9 @@ def main():
     print("the stay...")
     stay = fetch_stay()
 
+    print("quotes...")
+    quotes = load_quotes()
+
     stops = []
     for i in items:
         stop = {k: v for k, v in i.items() if not k.startswith("_")}
@@ -577,6 +620,7 @@ def main():
         "links": links,
         "photos": photos,
         "stay": stay,
+        "quotes": quotes,
     }
 
     write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))
