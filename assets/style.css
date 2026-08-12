@@ -422,18 +422,38 @@ a { color: var(--accent); }
 
 .foot { margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--line); }
 
-/* ---------- stop hints and house info ---------- */
+/* ---------- stop hints ---------- */
 .stop-hint {
   margin-top: 6px; font-size: .8rem; color: var(--accent-2);
 }
-.house-row {
-  display: flex; gap: 12px; align-items: baseline;
-  padding: 8px 0; border-bottom: 1px solid var(--line);
-  font-size: .88rem;
+
+/* ---------- the stay ---------- */
+#stay .disclosure { margin: 10px 0; }
+.stay-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
 }
-.house-row:last-child { border-bottom: 0; }
-.house-label { color: var(--ink-2); min-width: 110px; }
-.house-value { font-weight: 600; user-select: all; }
+.stay-label {
+  font-size: .7rem; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--ink-2); margin-bottom: 4px;
+}
+.stay-value {
+  font-size: 1rem; font-weight: 600;
+  white-space: pre-line;   /* the sheet puts real newlines in these cells */
+  user-select: all;        /* one tap selects a door code or phone number */
+}
+a.stay-value { display: inline-block; }
+.stay-long {
+  white-space: pre-line; font-size: .88rem; color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* Day tabs are two-line and narrow; All and Stay are single-line labels. */
+.daynav button.nav-wide {
+  flex-direction: row;
+  min-height: 44px;
+  font-size: .84rem; font-weight: 600;
+}
 
 /* ---------- compact header once the trip has started ---------- */
 .is-trip .hero { padding: 22px 0 18px; }

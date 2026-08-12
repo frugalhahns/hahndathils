@@ -236,8 +236,15 @@ function defaultDay(dates) {
 }
 
 function selectDay(value, { scroll = false } = {}) {
+  const staying = value === "stay";
+
+  // The Stay panel takes over the itinerary area rather than sitting below it.
+  $("#stay").hidden = !staying;
+  $("#days").hidden = staying;
+  $("#itinerary-title").textContent = staying ? "Where we're staying" : "Flexible itinerary";
+
   document.querySelectorAll(".day").forEach((sec) => {
-    sec.hidden = value !== "all" && sec.dataset.date !== value;
+    sec.hidden = staying || (value !== "all" && sec.dataset.date !== value);
   });
   document.querySelectorAll("#daynav-inner button").forEach((b) => {
     const on = b.dataset.day === value;
@@ -299,10 +306,19 @@ function renderItinerary() {
     nav.append(b);
   });
 
-  const all = el("button", null, "All");
+  const all = el("button", "nav-wide", "All");
   all.dataset.day = "all";
+  all.setAttribute("aria-pressed", "false");
   all.onclick = () => selectDay("all", { scroll: true });
   nav.append(all);
+
+  if (SITE.stay?.length) {
+    const stay = el("button", "nav-wide", "🏠 Stay");
+    stay.dataset.day = "stay";
+    stay.setAttribute("aria-pressed", "false");
+    stay.onclick = () => selectDay("stay", { scroll: true });
+    nav.append(stay);
+  }
 
   selectDay(defaultDay(dates));
 }
@@ -496,29 +512,51 @@ function renderPhotos() {
   wireCarousel(host);
 }
 
-/* Wifi, door code, checkout time. Lives in the encrypted payload, so it is
-   available offline and not sitting in a public file. */
-function renderHouse() {
-  const notes = SITE.house || [];
-  if (!notes.length) return;
+/* Airbnb details, straight from the second tab of the sheet. Door code and host
+   number live here, which is the argument for the passphrase, and it is inside
+   the offline payload so it works with no signal at the front door. */
+function renderStay() {
+  const rows = SITE.stay || [];
+  const host = $("#stay");
+  if (!rows.length) { host.innerHTML = ""; return; }
 
-  const host = $("#house");
-  const box = el("details", "disclosure");
-  const summary = el("summary");
-  summary.append(el("span", "disclosure-title", "House info"));
-  summary.append(el("span", "disclosure-count", `${notes.length} details`));
-  summary.append(el("span", "disclosure-action"));
-  box.append(summary);
+  rows.forEach((r) => {
+    const box = el("div", "stay-row");
+    box.append(el("div", "stay-label", r.label));
 
-  const body = el("div", "disclosure-body");
-  notes.forEach((n) => {
-    const row = el("div", "house-row");
-    row.append(el("span", "house-label", n.label));
-    row.append(el("span", "house-value", n.value));
-    body.append(row);
+    if (r.url) {
+      const a = el("a", "stay-value", "Open the listing ↗");
+      a.href = r.url; a.target = "_blank"; a.rel = "noopener";
+      box.append(a);
+      host.append(box);
+      return;
+    }
+
+    if (r.long) {
+      const det = el("details", "disclosure");
+      const sum = el("summary");
+      sum.append(el("span", "disclosure-title", r.label));
+      sum.append(el("span", "disclosure-action"));
+      det.append(sum);
+      const body = el("div", "disclosure-body");
+      body.append(el("div", "stay-long", r.value));
+      det.append(body);
+      host.append(det);
+      return;
+    }
+
+    const val = el("div", "stay-value", r.value);
+    // Addresses get a map link; everything else stays selectable text.
+    if (/address/i.test(r.label)) {
+      val.textContent = "";
+      const a = el("a", null, r.value);
+      a.href = mapsUrl(r.value.replace(/\n/g, ", "));
+      a.target = "_blank"; a.rel = "noopener";
+      val.append(a);
+    }
+    box.append(val);
+    host.append(box);
   });
-  box.append(body);
-  host.append(box);
 }
 
 // ---------------------------------------------------------------- uploading
@@ -636,8 +674,17 @@ function wireCarousel(track) {
 
   // scrollWidth forces layout, so measure on change rather than every frame.
   let room = 0;
-  const measure = () => { room = track.scrollWidth - track.clientWidth; };
-  measure();
+  const measure = () => {
+    room = track.scrollWidth - track.clientWidth;
+    sync();
+  };
+
+  /* The gallery is built while #site is still hidden, where scrollWidth and
+     clientWidth are both 0. Measuring only at setup would leave room at 0
+     forever, so nothing would drift and the arrows would stay hidden. A
+     ResizeObserver catches the moment it becomes visible, plus rotation and
+     late-loading images. */
+  new ResizeObserver(measure).observe(track);
   window.addEventListener("resize", measure);
   track.querySelectorAll("img").forEach((img) => {
     if (!img.complete) img.addEventListener("load", measure, { once: true });
@@ -786,7 +833,7 @@ function renderSite() {
   renderIdeas();
   renderEvents();
   renderLinks();
-  renderHouse();
+  renderStay();
   renderPhotos();
   wireUpload();
 

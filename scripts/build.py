@@ -33,7 +33,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 
 SHEET_ID = "16RxfeRHxWu3tie2SyiMKxWxSouBOHdeqBNXb_JxC5xA"
-SHEET_GID = "1657451631"
+SHEET_GID = "1657451631"   # itinerary tab
+STAY_GID = "0"             # Airbnb details tab
 
 UA = "hahndathils-trip-site (github.com/hahndathils)"
 PBKDF2_ITERS = 600_000
@@ -43,15 +44,13 @@ PBKDF2_ITERS = 600_000
 LOCATIONS = [
     {"key": "cortland", "label": "Cortland", "grid": "BGM/54,79", "lat": 42.6012, "lon": -76.1805},
     {"key": "ithaca", "label": "Ithaca", "grid": "BGM/44,70", "lat": 42.4440, "lon": -76.5019},
-    {"key": "lansing", "label": "Lansing", "grid": "BGM/42,75", "lat": 42.5545, "lon": -76.5522},
-    {"key": "montour", "label": "Montour Falls", "grid": "BGM/33,64", "lat": 42.3462, "lon": -76.8438},
 ]
 
-# Which forecast location best covers an itinerary stop.
+# Which forecast covers an itinerary stop. Lansing and Montour Falls are both
+# closer to Ithaca than Cortland, and inside the same forecast zone, so they
+# borrow Ithaca rather than carrying their own column.
 TOWN_TO_LOC = [
-    ("montour", ("montour",)),
-    ("lansing", ("lansing", "myers")),
-    ("ithaca", ("ithaca",)),
+    ("ithaca", ("ithaca", "lansing", "myers", "montour")),
     ("cortland", ("cortland",)),
 ]
 
@@ -130,12 +129,7 @@ def is_private_link(url):
 
 
 def fetch_itinerary():
-    url = (
-        f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export"
-        f"?format=csv&gid={SHEET_GID}"
-    )
-    text = get(url).decode("utf-8")
-    rows = list(csv.DictReader(io.StringIO(text)))
+    rows = list(csv.DictReader(io.StringIO(sheet_csv(SHEET_GID))))
 
     items, links = [], []
     in_notes = False
@@ -358,6 +352,45 @@ def write_encrypted(payload, passphrase, path):
 
 
 # --------------------------------------------------------------------------
+# the stay
+# --------------------------------------------------------------------------
+
+def sheet_csv(gid):
+    url = (f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export"
+           f"?format=csv&gid={gid}")
+    return get(url).decode("utf-8")
+
+
+def fetch_stay():
+    """Airbnb tab: two columns of 'LABEL:' and a possibly multi-line value.
+
+    Door code and host phone live here, which is the argument for keeping the
+    site behind its passphrase.
+    """
+    try:
+        rows = list(csv.reader(io.StringIO(sheet_csv(STAY_GID))))
+    except Exception as e:
+        print(f"  ! could not read the stay tab: {e}", file=sys.stderr)
+        return []
+
+    out = []
+    for row in rows:
+        label = (row[0] if row else "").strip().rstrip(":").strip()
+        value = (row[1] if len(row) > 1 else "").strip()
+        if not label or not value:
+            continue
+        out.append({
+            "label": label.title(),
+            "value": value,
+            "url": value if value.startswith("http") else "",
+            # Long blocks like the checkout chores collapse behind a toggle.
+            "long": len(value) > 120,
+        })
+    print(f"  {len(out)} stay details")
+    return out
+
+
+# --------------------------------------------------------------------------
 # photos
 # --------------------------------------------------------------------------
 
@@ -494,13 +527,8 @@ def main():
     print("photos...")
     photos = list_photos()
 
-    # Wifi password, door code, checkout time. Optional; renders only if filled.
-    house = []
-    house_path = os.path.join(ROOT, "scripts", "house.json")
-    if os.path.exists(house_path):
-        with open(house_path) as f:
-            house = [h for h in json.load(f) if h.get("value")]
-    print(f"  {len(house)} house notes")
+    print("the stay...")
+    stay = fetch_stay()
 
     stops = []
     for i in items:
@@ -522,7 +550,7 @@ def main():
         "ideas": ideas,
         "links": links,
         "photos": photos,
-        "house": house,
+        "stay": stay,
     }
 
     write_encrypted(site, passphrase, os.path.join(DATA, "site.enc.json"))
