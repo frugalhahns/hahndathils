@@ -193,6 +193,28 @@ function renderStop(stop) {
   return row;
 }
 
+/* Which day to open on: today if we are mid-trip, otherwise the next day
+   coming up, otherwise everything (the trip is over, so it is a scrapbook). */
+function defaultDay(dates) {
+  const today = todayISO();
+  if (dates.includes(today)) return today;
+  return dates.find((d) => d > today) || "all";
+}
+
+function selectDay(value, { scroll = false } = {}) {
+  document.querySelectorAll(".day").forEach((sec) => {
+    sec.hidden = value !== "all" && sec.dataset.date !== value;
+  });
+  document.querySelectorAll("#daynav-inner button").forEach((b) => {
+    b.classList.toggle("is-on", b.dataset.day === value);
+  });
+  if (scroll) {
+    // Land just under the sticky nav rather than at the very top of the page.
+    const y = $("#itinerary").getBoundingClientRect().top + window.scrollY - 56;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }
+}
+
 function renderItinerary() {
   const host = $("#days");
   const nav = $("#daynav-inner");
@@ -203,6 +225,7 @@ function renderItinerary() {
     const stops = SITE.itinerary.filter((s) => s.date === date);
     const sec = el("section", "day");
     sec.id = `d-${date}`;
+    sec.dataset.date = date;
 
     const head = el("div", "day-head");
     head.append(el("h3", null, dayName(date)));
@@ -214,11 +237,24 @@ function renderItinerary() {
 
     stops.forEach((s) => sec.append(renderStop(s)));
     host.append(sec);
-
-    const a = el("a", date === today ? "is-today" : null, shortDay(date));
-    a.href = `#d-${date}`;
-    nav.append(a);
   });
+
+  dates.forEach((date) => {
+    const b = el("button");
+    b.dataset.day = date;
+    b.append(el("span", "nav-day", shortDay(date)));
+    b.append(el("span", "nav-date", localDate(date).getDate()));
+    if (date === today) b.classList.add("is-today");
+    b.onclick = () => selectDay(date, { scroll: true });
+    nav.append(b);
+  });
+
+  const all = el("button", null, "All");
+  all.dataset.day = "all";
+  all.onclick = () => selectDay("all", { scroll: true });
+  nav.append(all);
+
+  selectDay(defaultDay(dates));
 }
 
 // ---------------------------------------------------------------- forecast
@@ -420,10 +456,6 @@ function renderSite() {
 
   $("#gate").hidden = true;
   $("#site").hidden = false;
-
-  // Jump to today if it is one of the trip days.
-  const t = document.getElementById(`d-${todayISO()}`);
-  if (t && !location.hash) t.scrollIntoView({ block: "start" });
 }
 
 // ---------------------------------------------------------------- boot
