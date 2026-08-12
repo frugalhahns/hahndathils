@@ -36,6 +36,16 @@
   --title-weight: 650;
   --title-tracking: -.02em;
   --wrap: 940px;
+
+  /* One vertical rhythm scale, so spacing is a decision made once rather than
+     a different magic number per block. */
+  --space-section: 56px;  /* between top-level sections */
+  --space-block: 30px;    /* between blocks inside a section, e.g. days */
+  --space-head: 18px;     /* under a section heading */
+}
+
+@media (max-width: 620px) {
+  :root { --space-section: 40px; --space-block: 24px; }
 }
 
 * { box-sizing: border-box; }
@@ -65,6 +75,7 @@ body::before {
 .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 18px; }
 
 h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; font-weight: var(--title-weight); }
+h2 { margin-bottom: var(--space-head); }
 h1, h2 { font-family: var(--font-display); letter-spacing: var(--title-tracking); }
 h1 { font-size: clamp(2.1rem, 8vw, 3.2rem); }
 h2 { font-size: 1.25rem; }
@@ -161,14 +172,14 @@ a { color: var(--accent); }
 .daynav button.is-on.is-today .nav-date::after { background: var(--bg); }
 
 /* ---------- sections ---------- */
-.section { margin: 34px 0; }
+.section { margin: var(--space-section) 0; }
 .card {
   background: var(--card);
   border: var(--card-border);
   border-radius: var(--radius);
   padding: 16px;
 }
-.now { margin-top: 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.now { margin-top: 28px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
 .now .big { font-size: 2.4rem; line-height: 1; }
 .now .now-temp { font-size: 1.6rem; font-weight: 650; font-family: var(--font-display); }
 .now .now-next { flex: 1 1 220px; border-left: 1px solid var(--line); padding-left: 18px; }
@@ -177,10 +188,10 @@ a { color: var(--accent); }
 }
 
 /* ---------- itinerary ---------- */
-.day { margin-bottom: 26px; scroll-margin-top: 64px; }
+.day { margin-bottom: var(--space-block); scroll-margin-top: 64px; }
 .day-head {
   display: flex; align-items: baseline; gap: 10px;
-  padding-bottom: 8px; margin-bottom: 12px;
+  padding-bottom: 10px; margin-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
 .day-head h3 { margin: 0; font-size: 1.05rem; font-family: var(--font-display); }
@@ -190,7 +201,7 @@ a { color: var(--accent); }
   display: grid;
   grid-template-columns: 74px 1fr;
   gap: 14px;
-  padding: 12px 0;
+  padding: 15px 0;
   border-bottom: 1px dashed var(--line);
 }
 .stop:last-child { border-bottom: 0; }
@@ -247,7 +258,7 @@ a { color: var(--accent); }
 .pop { color: var(--rain); font-size: .78rem; }
 
 /* ---------- ideas ---------- */
-.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
 .idea {
   background: var(--card); border: var(--card-border);
   border-radius: var(--radius); padding: 14px;
@@ -343,7 +354,7 @@ a { color: var(--accent); }
 
 /* ---------- photos ---------- */
 .section-head { display: flex; align-items: center; gap: 12px; }
-.section-head h2 { margin-bottom: .4em; }
+.section-head h2 { margin-bottom: 0; }
 .btn-add { margin-left: auto; padding: 7px 14px; font-size: .82rem; }
 .btn-add + .ph-arrows { margin-left: 0; }
 .ph-arrows { margin-left: auto; display: flex; gap: 6px; }
@@ -420,7 +431,7 @@ a { color: var(--accent); }
 .btn[disabled] { opacity: .6; cursor: progress; }
 .btn-ghost { background: none; border: 1px solid var(--line); color: var(--ink-2); }
 
-.foot { margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--line); }
+.foot { margin: var(--space-section) auto 0; padding-top: 24px; border-top: 1px solid var(--line); }
 
 /* ---------- stop hints ---------- */
 .stop-hint {
@@ -430,7 +441,7 @@ a { color: var(--accent); }
 /* ---------- the stay ---------- */
 #stay .disclosure { margin: 10px 0; }
 .stay-row {
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid var(--line);
 }
 .stay-label {
