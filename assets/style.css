@@ -369,10 +369,10 @@ a { color: var(--accent); }
 .gallery {
   display: flex; gap: 10px;
   overflow-x: auto;
-  /* Proximity, not mandatory: mandatory snapping fights the slow auto-drift,
-     yanking it back to the nearest photo every frame. Proximity still snaps a
-     manual swipe but leaves small programmatic movement alone. */
-  scroll-snap-type: x proximity;
+  /* No snapping at all. Even proximity snapping fights a per-frame scroll
+     nudge: the browser keeps trying to settle on the nearest photo while the
+     drift keeps moving, and the tug of war shows up as stutter. */
+  scroll-snap-type: none;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 4px;
@@ -382,7 +382,6 @@ a { color: var(--accent); }
   flex: 0 0 auto;
   width: 78%; max-width: 300px;
   aspect-ratio: 4 / 3; object-fit: cover;
-  scroll-snap-align: start;
   border-radius: 10px; cursor: pointer; background: var(--card);
   border: 1px solid var(--line);
 }

@@ -682,7 +682,7 @@ function wireUpload() {
   };
 }
 
-const DRIFT_SPEED = 22;        // px per second, slow enough to read as ambient
+const DRIFT_SPEED = 55;        // px per second; a full pass takes ~30s on a phone
 const DRIFT_RESUME_MS = 5000;  // stillness required before it picks back up
 
 function wireCarousel(track) {
@@ -733,16 +733,19 @@ function wireCarousel(track) {
   prev.onclick = () => { hold(); scrollByCard(-1); };
   next.onclick = () => { hold(); scrollByCard(1); };
 
-  let syncQueued = false;
+  /* Only touch the DOM when a value actually changes. The drift fires a scroll
+     event every frame, and reassigning .disabled each time invalidates style
+     on both buttons 60 times a second, which is its own source of stutter. */
+  let wasPrev = null;
+  let wasNext = null;
+  let wasHidden = null;
   const sync = () => {
-    if (syncQueued) return;
-    syncQueued = true;
-    requestAnimationFrame(() => {
-      syncQueued = false;
-      prev.disabled = track.scrollLeft <= 2;
-      next.disabled = track.scrollLeft >= room - 2;
-      arrows.hidden = room <= 0;
-    });
+    const atStart = track.scrollLeft <= 2;
+    const atEnd = track.scrollLeft >= room - 2;
+    const noRoom = room <= 0;
+    if (atStart !== wasPrev) { prev.disabled = atStart; wasPrev = atStart; }
+    if (atEnd !== wasNext) { next.disabled = atEnd; wasNext = atEnd; }
+    if (noRoom !== wasHidden) { arrows.hidden = noRoom; wasHidden = noRoom; }
   };
   track.addEventListener("scroll", sync, { passive: true });
   sync();
