@@ -1,7 +1,7 @@
 // Hahndathils trip site. No framework, no build step.
 // Decrypts data/site.enc.json in the browser once the passphrase is entered.
 
-import { initSparkles } from "./sparkle.js?v=db33e9a8";
+import { initSparkles } from "./sparkle.js?v=211e46b1";
 
 const CONFIG = {
   photoDir: "photos",
