@@ -680,7 +680,7 @@ function wireUpload() {
   };
 }
 
-const DRIFT_SPEED = 14;        // px per second, slow enough to read as ambient
+const DRIFT_SPEED = 22;        // px per second, slow enough to read as ambient
 const DRIFT_RESUME_MS = 5000;  // stillness required before it picks back up
 
 function wireCarousel(track) {
@@ -712,11 +712,16 @@ function wireCarousel(track) {
   let last = 0;
   let paused = false;
   let timer = null;
+  let pos = 0;
 
   function hold(ms = DRIFT_RESUME_MS) {
     paused = true;
     clearTimeout(timer);
-    timer = setTimeout(() => { paused = false; last = 0; }, ms);
+    timer = setTimeout(() => {
+      paused = false;
+      last = 0;
+      pos = track.scrollLeft;  // pick up wherever the swipe left off
+    }, ms);
   }
 
   const scrollByCard = (d) => {
@@ -756,7 +761,11 @@ function wireCarousel(track) {
     const dt = last ? Math.min((ts - last) / 1000, 0.1) : 0;
     last = ts;
 
-    let pos = track.scrollLeft + dir * DRIFT_SPEED * dt;
+    /* pos is kept as a float here rather than read back from scrollLeft each
+       frame. At this speed a frame advances well under a pixel, and browsers
+       round scrollLeft on read, so round-tripping through the DOM would throw
+       away the fraction every frame and nothing would ever move. */
+    pos += dir * DRIFT_SPEED * dt;
     if (pos >= room) { pos = room; dir = -1; }
     else if (pos <= 0) { pos = 0; dir = 1; }
     track.scrollLeft = pos;
