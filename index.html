@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
 <link rel="preconnect" href="https://api.github.com">
-<link rel="stylesheet" href="assets/style.css?v=0275d904">
+<link rel="stylesheet" href="assets/style.css?v=992a0f29">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -53,15 +53,22 @@
   </section>
 
   <section id="ideas" class="section">
-    <h2>If you want to add something</h2>
-    <div class="chips">
-      <button class="chip is-on" data-filter="all">Everything</button>
-      <button class="chip" data-filter="outdoor">Outdoor</button>
-      <button class="chip" data-filter="indoor">Rain plan</button>
-    </div>
-    <div id="ideas-body" class="grid"></div>
-    <div id="events-body"></div>
-    <div id="links-body" class="links"></div>
+    <details class="disclosure">
+      <summary>
+        <span class="disclosure-title">If you want to add something</span>
+        <span class="disclosure-count" id="ideas-count"></span>
+      </summary>
+      <div class="disclosure-body">
+        <div class="chips">
+          <button class="chip is-on" data-filter="all">Everything</button>
+          <button class="chip" data-filter="outdoor">Outdoor</button>
+          <button class="chip" data-filter="indoor">Rain plan</button>
+        </div>
+        <div id="ideas-body" class="grid"></div>
+        <div id="links-body" class="links"></div>
+      </div>
+    </details>
+    <div id="events-leftover"></div>
   </section>
 
   <section id="photos" class="section">
@@ -96,6 +103,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=43c1d2ca" type="module"></script>
+<script src="assets/app.js?v=c7235078" type="module"></script>
 </body>
 </html>

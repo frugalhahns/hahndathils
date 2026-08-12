@@ -263,7 +263,50 @@ a { color: var(--accent); }
 }
 .event-list { margin-top: 18px; }
 .event { padding: 9px 0; border-bottom: 1px solid var(--line); font-size: .87rem; }
+.event:last-child { border-bottom: 0; }
 .event-note { margin-top: 3px; font-size: .82rem; color: var(--ink-2); }
+
+/* ---------- disclosures ---------- */
+.disclosure, .day-events { border-top: 1px solid var(--line); }
+.disclosure > summary, .day-events > summary {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 2px; cursor: pointer;
+  list-style: none;
+  color: var(--ink);
+  user-select: none;
+}
+.disclosure > summary::-webkit-details-marker,
+.day-events > summary::-webkit-details-marker { display: none; }
+
+.disclosure-title { font-weight: 600; font-size: .95rem; }
+.disclosure-count {
+  font-size: .7rem; color: var(--ink-2);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 1px 8px; font-variant-numeric: tabular-nums;
+}
+/* Chevron, rotated when open. */
+.disclosure > summary::after, .day-events > summary::after {
+  content: "›";
+  margin-left: auto;
+  font-size: 1.2rem; line-height: 1;
+  color: var(--ink-2);
+  transform: rotate(90deg);
+  transition: transform .18s ease;
+}
+.disclosure[open] > summary::after, .day-events[open] > summary::after {
+  transform: rotate(-90deg);
+}
+.disclosure > summary:hover, .day-events > summary:hover { color: var(--accent); }
+.disclosure-body { padding: 2px 0 18px; }
+
+/* Events nested under a day read as secondary to the stops above them. */
+.day-events {
+  margin-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+.day-events > summary { padding: 11px 2px; }
+.day-events .disclosure-title { font-weight: 500; font-size: .85rem; color: var(--ink-2); }
+.day-events .disclosure-body { padding-bottom: 4px; }
 
 /* ---------- photos ---------- */
 .section-head { display: flex; align-items: center; gap: 12px; }

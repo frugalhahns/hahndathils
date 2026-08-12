@@ -250,6 +250,10 @@ function renderItinerary() {
     sec.append(head);
 
     stops.forEach((s) => sec.append(renderStop(s)));
+
+    const events = dayEvents(date);
+    if (events) sec.append(events);
+
     host.append(sec);
   });
 
@@ -323,6 +327,7 @@ function renderLocTabs() {
 function renderIdeas(filter = "all") {
   const host = $("#ideas-body");
   host.innerHTML = "";
+  $("#ideas-count").textContent = String(SITE.ideas.length);
   SITE.ideas
     .filter((i) => filter === "all" || (filter === "indoor" ? i.indoor : !i.indoor))
     .forEach((i) => {
@@ -341,22 +346,60 @@ function renderIdeas(filter = "all") {
     });
 }
 
+function eventRow(e, { showDay = false } = {}) {
+  const row = el("div", "event");
+  const a = el("a", null, e.name);
+  a.href = e.url; a.target = "_blank"; a.rel = "noopener";
+  row.append(a);
+
+  const bits = [];
+  if (showDay) {
+    bits.push(localDate(e.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }));
+  }
+  if (e.time) bits.push(parseTimeLabel(e.time));
+  if (e.venue) bits.push(e.venue + (e.town && !e.venue.includes(e.town) ? ", " + e.town : ""));
+  row.append(el("div", "muted", bits.join(" · ")));
+
+  if (e.note) row.append(el("div", "event-note", e.note));
+  return row;
+}
+
+/* Events sit inside the day they happen rather than in one long block, so the
+   day filter narrows them for free and nothing competes with the itinerary. */
+function dayEvents(date) {
+  const events = SITE.events.filter((e) => e.date === date);
+  if (!events.length) return null;
+
+  const box = el("details", "day-events");
+  const summary = el("summary");
+  summary.append(el("span", "disclosure-title",
+    `Also happening ${localDate(date).toLocaleDateString(undefined, { weekday: "long" })}`));
+  summary.append(el("span", "disclosure-count", String(events.length)));
+  box.append(summary);
+
+  const body = el("div", "disclosure-body");
+  events.forEach((e) => body.append(eventRow(e)));
+  box.append(body);
+  return box;
+}
+
+/* Anything outside the trip dates still deserves a home. */
 function renderEvents() {
-  if (!SITE.events?.length) return;
-  const host = $("#events-body");
-  host.className = "event-list";
-  host.append(el("h3", null, "Happening this week"));
-  SITE.events.forEach((e) => {
-    const row = el("div", "event");
-    const a = el("a", null, e.name);
-    a.href = e.url; a.target = "_blank"; a.rel = "noopener";
-    row.append(a);
-    const when = localDate(e.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-    const time = e.time ? " · " + parseTimeLabel(e.time) : "";
-    row.append(el("div", "muted", `${when}${time} · ${e.venue}${e.town ? ", " + e.town : ""}`));
-    if (e.note) row.append(el("div", "event-note", e.note));
-    host.append(row);
-  });
+  const dates = new Set(SITE.itinerary.map((s) => s.date));
+  const leftover = SITE.events.filter((e) => !dates.has(e.date));
+  if (!leftover.length) return;
+
+  const host = $("#events-leftover");
+  const box = el("details", "disclosure");
+  const summary = el("summary");
+  summary.append(el("span", "disclosure-title", "Happening nearby this week"));
+  summary.append(el("span", "disclosure-count", String(leftover.length)));
+  box.append(summary);
+
+  const body = el("div", "disclosure-body");
+  leftover.forEach((e) => body.append(eventRow(e, { showDay: true })));
+  box.append(body);
+  host.append(box);
 }
 
 function renderLinks() {
