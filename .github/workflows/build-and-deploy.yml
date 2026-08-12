@@ -4,8 +4,11 @@ on:
   push:
     branches: [main]
   schedule:
-    # 11:00 UTC = 7am Eastern. GitHub's scheduler drifts by 5-30 min on free runners.
-    - cron: "0 11 * * *"
+    # Every 3 hours during the trip, once a day otherwise. The 11:00 UTC run
+    # (7am Eastern) always proceeds; the rest bail early unless today falls in
+    # the trip window, so this does not churn commits for the rest of the year.
+    # GitHub's scheduler drifts 5-30 min on free runners, so these are rough.
+    - cron: "0 2,5,8,11,14,17,20,23 * * *"
   workflow_dispatch:
 
 permissions:
@@ -19,7 +22,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Decides whether an off-peak scheduled run is worth doing at all. Pushes and
+  # manual runs always proceed; so does the daily 11:00 UTC one.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          IS_SCHEDULE: ${{ github.event_name == 'schedule' }}
+        run: |
+          # All eight hours share one cron expression, so github.event.schedule
+          # cannot tell them apart. Use the clock instead.
+          if [ "$IS_SCHEDULE" != "true" ] || [ "$(date -u +%H)" = "11" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # scripts/trip_window.py exits 0 while the trip is on, 1 otherwise.
+          if python3 scripts/trip_window.py; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "outside the trip window, skipping this run"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

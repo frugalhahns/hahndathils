@@ -950,6 +950,7 @@ function renderSite() {
   renderQuotes();
   wireQuoteForm();
   wireViewBar();
+  startAutoRefresh();
   renderPhotos();
   wireUpload();
 
@@ -1001,6 +1002,50 @@ function wireGate() {
       btn.disabled = false;
       btn.textContent = "Unlock";
     }
+  });
+}
+
+/* The now card is computed once at render, so an open tab would sit on the
+   morning's hour all day. These keep it honest without a manual reload. */
+const TICK_MS = 2 * 60 * 1000;      // recompute "up next" and the current hour
+const REFETCH_MS = 30 * 60 * 1000;  // pull a newer payload if the build ran
+
+let lastFetch = Date.now();
+
+async function refreshPayload() {
+  if (!SITE) return;
+  try {
+    const res = await fetch("data/site.enc.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const fresh = await decryptPayload(await res.json(), savedPass());
+    lastFetch = Date.now();
+    if (fresh.generated === SITE.generated) return;  // same build, nothing to do
+
+    SITE = fresh;
+    renderCountdown();
+    renderNow();
+    $("#generated").textContent =
+      "Updated " + new Date(SITE.generated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    // Offline or the passphrase rotated. The cached payload stays on screen.
+  }
+}
+
+function startAutoRefresh() {
+  setInterval(() => {
+    renderCountdown();
+    renderNow();
+  }, TICK_MS);
+
+  setInterval(refreshPayload, REFETCH_MS);
+
+  // Coming back to a backgrounded tab is the case that matters most: the phone
+  // was in a pocket for hours and the timers above were throttled or frozen.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    renderCountdown();
+    renderNow();
+    if (Date.now() - lastFetch > REFETCH_MS) refreshPayload();
   });
 }
 
