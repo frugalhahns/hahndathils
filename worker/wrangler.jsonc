@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hahndathils-upload",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "REPO": "frugalhahns/hahndathils",
+    "BRANCH": "main",
+    "PHOTO_DIR": "photos"
+  }
+  // Secrets, set with `wrangler secret put <NAME>`:
+  //   GH_TOKEN         fine-grained PAT, Contents read+write, this repo only
+  //   TRIP_PASSPHRASE  same passphrase the site is gated behind
+}

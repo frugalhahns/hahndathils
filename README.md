@@ -80,3 +80,28 @@ Then open http://localhost:8000. WebCrypto needs a secure context, which
 | --- | --- | --- |
 | `TRIP_PASSPHRASE` | yes | encrypts the whole payload; the build fails without it |
 | `TICKETMASTER_KEY` | no | adds real concert and show listings within 35 miles |
+
+## Photo uploads without a GitHub account
+
+`worker/` holds a small Cloudflare Worker that accepts an upload from the site
+and commits it to `photos/` using a token that never reaches the browser. The
+site is static, so it cannot take a file POST on its own.
+
+Flow: someone taps **+ Add photos**, the browser downscales to 1600px and
+re-encodes as JPEG, the Worker checks the trip passphrase and commits the file.
+The regular build workflow then normalizes it and redeploys, so the photo shows
+up for everyone about a minute or two later. The uploader sees theirs right
+away from the local file.
+
+Deploy:
+
+```sh
+cd worker
+npx wrangler login
+npx wrangler secret put GH_TOKEN         # fine-grained PAT, Contents RW, this repo only
+npx wrangler secret put TRIP_PASSPHRASE  # same passphrase the site uses
+npx wrangler deploy
+```
+
+If the deployed URL differs from the default, update `CONFIG.uploadUrl` in
+`assets/app.js`. Setting it to an empty string hides the upload button.

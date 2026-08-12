@@ -268,6 +268,8 @@ a { color: var(--accent); }
 /* ---------- photos ---------- */
 .section-head { display: flex; align-items: center; gap: 12px; }
 .section-head h2 { margin-bottom: .4em; }
+.btn-add { margin-left: auto; padding: 7px 14px; font-size: .82rem; }
+.btn-add + .ph-arrows { margin-left: 0; }
 .ph-arrows { margin-left: auto; display: flex; gap: 6px; }
 .ph-arrows button {
   width: 32px; height: 32px; border-radius: 50%;

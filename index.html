@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
 <link rel="preconnect" href="https://api.github.com">
-<link rel="stylesheet" href="assets/style.css?v=22d5d437">
+<link rel="stylesheet" href="assets/style.css?v=0275d904">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -67,11 +67,14 @@
   <section id="photos" class="section">
     <div class="section-head">
       <h2>Photos</h2>
+      <button id="ph-add" class="btn btn-add">+ Add photos</button>
       <div id="ph-arrows" class="ph-arrows" hidden>
         <button id="ph-prev" aria-label="Previous photos">‹</button>
         <button id="ph-next" aria-label="More photos">›</button>
       </div>
     </div>
+    <input type="file" id="ph-input" accept="image/*" multiple hidden>
+    <p class="muted" id="ph-status" hidden></p>
     <p class="muted" id="photos-hint">Loading…</p>
     <div id="photos-body" class="gallery"></div>
   </section>
@@ -93,6 +96,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=4976f62c" type="module"></script>
+<script src="assets/app.js?v=f349c81d" type="module"></script>
 </body>
 </html>

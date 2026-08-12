@@ -7,6 +7,11 @@ const CONFIG = {
   photoRepo: "frugalhahns/hahndathils",
   photoDir: "photos",
   photoBranch: "main",
+  // Cloudflare Worker that accepts uploads and commits them to the repo, so
+  // nobody needs a GitHub account. Empty string hides the upload button.
+  uploadUrl: "https://hahndathils-upload.frugalhahns.workers.dev/upload",
+  maxEdge: 1600,
+  jpegQuality: 0.82,
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -413,6 +418,111 @@ async function renderPhotos() {
   wireCarousel(host);
 }
 
+// ---------------------------------------------------------------- uploading
+
+/* Shrink in the browser before sending. Keeps the repo small, makes the upload
+   fast on hotel wifi, and re-encoding as JPEG sidesteps HEIC, which only Safari
+   can display. createImageBitmap applies the EXIF rotation, which matters
+   because canvas would otherwise drop it and land everything sideways. */
+async function shrink(file) {
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, CONFIG.maxEdge / Math.max(bitmap.width, bitmap.height));
+  const w = Math.round(bitmap.width * scale);
+  const h = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+
+  const blob = await new Promise((res) =>
+    canvas.toBlob(res, "image/jpeg", CONFIG.jpegQuality)
+  );
+  if (!blob) throw new Error("could not read that image");
+  return blob;
+}
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(String(reader.result).split(",")[1]);
+    reader.onerror = () => rej(new Error("could not read file"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function uploadOne(file, pass) {
+  const blob = await shrink(file);
+  const res = await fetch(CONFIG.uploadUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      pass,
+      taken: new Date(file.lastModified || Date.now()).toISOString(),
+      data: await blobToBase64(blob),
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail.error || `upload failed (${res.status})`);
+  }
+  return URL.createObjectURL(blob);
+}
+
+async function handleUpload(files) {
+  const status = $("#ph-status");
+  const track = $("#photos-body");
+  const pass = sessionStorage.getItem("trip-pass");
+  if (!pass) { status.textContent = "Unlock the site first."; return; }
+
+  let done = 0;
+  const failures = [];
+  status.hidden = false;
+
+  for (const file of files) {
+    status.textContent = `Uploading ${done + 1} of ${files.length}...`;
+    try {
+      const localUrl = await uploadOne(file, pass);
+      // Show it straight away. The real file lands in the gallery a minute or
+      // two later once the build finishes, so this covers the gap.
+      const img = el("img");
+      img.src = localUrl;
+      img.alt = file.name;
+      PHOTOS.unshift(localUrl);
+      track.prepend(img);
+      img.onclick = () => openLightbox(PHOTOS.indexOf(localUrl));
+      done++;
+    } catch (e) {
+      failures.push(`${file.name}: ${e.message}`);
+    }
+  }
+
+  $("#photos-hint").hidden = done > 0;
+  status.textContent = failures.length
+    ? `Uploaded ${done}. Failed: ${failures.join("; ")}`
+    : `Uploaded ${done} photo${done === 1 ? "" : "s"}. They appear for everyone in a minute or two.`;
+}
+
+function wireUpload() {
+  const btn = $("#ph-add");
+  const input = $("#ph-input");
+  if (!CONFIG.uploadUrl) { btn.hidden = true; return; }
+
+  btn.onclick = () => input.click();
+  input.onchange = async () => {
+    const files = [...input.files];
+    input.value = ""; // let the same file be picked again after a failure
+    if (!files.length) return;
+    btn.disabled = true;
+    try {
+      await handleUpload(files);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
 function wireCarousel(track) {
   const scrollBy = (dir) => {
     const step = track.querySelector("img")?.getBoundingClientRect().width || 260;
@@ -504,6 +614,7 @@ function renderSite() {
   renderEvents();
   renderLinks();
   renderPhotos();
+  wireUpload();
 
   $("#generated").textContent =
     "Updated " + new Date(SITE.generated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
