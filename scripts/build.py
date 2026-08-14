@@ -180,19 +180,23 @@ def fetch_itinerary():
             "_privateLink": raw_link if is_private_link(raw_link) else "",
         })
 
-    items = drop_hidden(items)
+    items = apply_overrides(items)
     items.extend(extra_stops(items))
     items.sort(key=lambda i: (i["date"], i["time"] or "99:99"))
     return items, links
 
 
-def drop_hidden(items):
-    """Remove sheet rows listed in scripts/hidden_stops.json.
+def apply_overrides(items):
+    """Drop or edit sheet rows, per scripts/hidden_stops.json.
 
     The sheet is read-only from here, so plans that change mid-trip need a way
-    to be taken off the site without editing the source. Matching is a
-    case-insensitive substring of the activity, scoped to one date, because
-    several activities span multiple lines.
+    to be adjusted without editing the source. Matching is a case-insensitive
+    substring of the activity, scoped to one date, because several activities
+    span multiple lines.
+
+    A rule with "match" hides the whole stop. A rule with "strip" instead keeps
+    the stop and removes only the lines containing that text, which is how a
+    two-part activity like "Cornell Dairy Bar / + Campus walk" loses one half.
     """
     path = os.path.join(ROOT, "scripts", "hidden_stops.json")
     try:
@@ -204,16 +208,34 @@ def drop_hidden(items):
         print(f"  ! could not read hidden_stops.json: {e}", file=sys.stderr)
         return items
 
+    def matches(rule, item, key):
+        needle = (rule.get(key) or "").strip().lower()
+        return (needle
+                and rule.get("date") == item["date"]
+                and needle in item["activity"].lower())
+
     kept = []
     for item in items:
-        hit = next((r for r in rules
-                    if r.get("date") == item["date"]
-                    and (r.get("match") or "").lower() in item["activity"].lower()), None)
-        if hit:
-            first = item["activity"].splitlines()[0]
-            print(f"    hidden: {first}  ({hit.get('why', 'no reason given')})")
-        else:
-            kept.append(item)
+        hide = next((r for r in rules if matches(r, item, "match")), None)
+        if hide:
+            print(f"    hidden: {item['activity'].splitlines()[0]}"
+                  f"  ({hide.get('why', 'no reason given')})")
+            continue
+
+        for rule in [r for r in rules if matches(r, item, "strip")]:
+            needle = rule["strip"].strip().lower()
+            lines = [l for l in item["activity"].splitlines()
+                     if needle not in l.lower()]
+            if not lines:
+                continue  # never strip a stop down to nothing
+            item["activity"] = "\n".join(lines).strip()
+            # The id is derived from the activity text, so it has to follow.
+            item["id"] = hashlib.sha1(
+                f"{item['date']}|{item['time']}|{item['activity']}".encode("utf-8")
+            ).hexdigest()[:10]
+            print(f"    stripped {rule['strip']!r} from: {item['activity']}")
+
+        kept.append(item)
     return kept
 
 

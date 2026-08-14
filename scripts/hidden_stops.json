@@ -18,5 +18,10 @@
     "date": "2026-08-14",
     "match": "A&W Restaurant",
     "why": "dropped from Friday"
+  },
+  {
+    "date": "2026-08-14",
+    "strip": "Campus walk",
+    "why": "keep the dairy bar, drop the walk"
   }
 ]
