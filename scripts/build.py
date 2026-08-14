@@ -180,8 +180,69 @@ def fetch_itinerary():
             "_privateLink": raw_link if is_private_link(raw_link) else "",
         })
 
+    items.extend(extra_stops(items))
     items.sort(key=lambda i: (i["date"], i["time"] or "99:99"))
     return items, links
+
+
+def build_item(date, hhmm, label, activity, type_, notes, location, raw_link):
+    one_line = "\n" not in notes and len(notes) <= 45
+    town, state = split_location(location)
+    return {
+        "id": hashlib.sha1(f"{date}|{hhmm}|{activity}".encode("utf-8")).hexdigest()[:10],
+        "date": date,
+        "time": hhmm,
+        "timeLabel": label,
+        "activity": activity,
+        "type": type_,
+        "hint": notes if one_line else "",
+        "notes": "" if one_line else notes,
+        "town": ", ".join(x for x in (town, state) if x),
+        "wx": loc_key_for(town, location, activity),
+        "link": "" if is_private_link(raw_link) else raw_link,
+        "hasPrivate": bool(location or is_private_link(raw_link)),
+        "_location": location,
+        "_privateLink": raw_link if is_private_link(raw_link) else "",
+    }
+
+
+def extra_stops(existing):
+    """Stops added from here rather than the sheet.
+
+    The sheet stays the source of truth, but editing it from a phone mid-trip is
+    awkward. Anything added to the sheet later with the same date, time, and
+    activity wins, so putting a stop in both places will not duplicate it.
+    """
+    path = os.path.join(ROOT, "scripts", "extra_stops.json")
+    try:
+        with open(path) as f:
+            rows = json.load(f)
+    except FileNotFoundError:
+        return []
+    except Exception as e:
+        print(f"  ! could not read extra_stops.json: {e}", file=sys.stderr)
+        return []
+
+    seen = {(i["date"], i["time"], i["activity"].strip().lower()) for i in existing}
+    out = []
+    for r in rows:
+        date = parse_date(r.get("date"))
+        activity = (r.get("activity") or "").strip()
+        if not date or not activity:
+            continue
+        hhmm, label = parse_time(r.get("time"))
+        if (date, hhmm, activity.lower()) in seen:
+            print(f"    already in the sheet, skipping: {activity}")
+            continue
+        out.append(build_item(
+            date, hhmm, label, activity,
+            (r.get("type") or "").strip(),
+            (r.get("notes") or "").strip(),
+            (r.get("location") or "").strip(),
+            (r.get("link") or "").strip(),
+        ))
+        print(f"    added from extra_stops.json: {activity}")
+    return out
 
 
 # --------------------------------------------------------------------------
