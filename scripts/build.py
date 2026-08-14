@@ -180,9 +180,41 @@ def fetch_itinerary():
             "_privateLink": raw_link if is_private_link(raw_link) else "",
         })
 
+    items = drop_hidden(items)
     items.extend(extra_stops(items))
     items.sort(key=lambda i: (i["date"], i["time"] or "99:99"))
     return items, links
+
+
+def drop_hidden(items):
+    """Remove sheet rows listed in scripts/hidden_stops.json.
+
+    The sheet is read-only from here, so plans that change mid-trip need a way
+    to be taken off the site without editing the source. Matching is a
+    case-insensitive substring of the activity, scoped to one date, because
+    several activities span multiple lines.
+    """
+    path = os.path.join(ROOT, "scripts", "hidden_stops.json")
+    try:
+        with open(path) as f:
+            rules = json.load(f)
+    except FileNotFoundError:
+        return items
+    except Exception as e:
+        print(f"  ! could not read hidden_stops.json: {e}", file=sys.stderr)
+        return items
+
+    kept = []
+    for item in items:
+        hit = next((r for r in rules
+                    if r.get("date") == item["date"]
+                    and (r.get("match") or "").lower() in item["activity"].lower()), None)
+        if hit:
+            first = item["activity"].splitlines()[0]
+            print(f"    hidden: {first}  ({hit.get('why', 'no reason given')})")
+        else:
+            kept.append(item)
+    return kept
 
 
 def build_item(date, hhmm, label, activity, type_, notes, location, raw_link):
@@ -485,8 +517,13 @@ def list_photos():
 # "Cortland Beer Company" would match the itinerary's "Ithaca Beer Company".
 IDEA_STOPWORDS = {
     "the", "of", "and", "at", "a", "an", "state", "park", "trail", "co",
-    "annual", "st", "nature", "center",
+    "annual", "st", "nature",
 }
+
+# A single word is not enough to identify a place. "Center Ithaca" reduces to
+# just "ithaca" once stopwords go, and that appears in nearly every stop, so it
+# matched everything and hid the idea whether or not it was actually planned.
+MIN_IDEA_TOKENS = 2
 
 
 def significant(name):
@@ -509,7 +546,9 @@ def prune_ideas(ideas, items):
     def already_planned(idea):
         for variant in idea["name"].split("/"):
             tokens = significant(variant)
-            if tokens and any(all(t in hay for t in tokens) for hay in haystacks):
+            if len(tokens) < MIN_IDEA_TOKENS:
+                continue
+            if any(all(t in hay for t in tokens) for hay in haystacks):
                 return True
         return False
 
