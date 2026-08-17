@@ -19,7 +19,7 @@
     {
       "binding": "SEEN",
       "database_name": "hahndathils-seen",
-      "database_id": "PASTE_DATABASE_ID_HERE"
+      "database_id": "824d6aa1-665e-4e88-b529-43503a5b3f3d"
     }
   ]
   // Secrets, set with `wrangler secret put <NAME>`:
