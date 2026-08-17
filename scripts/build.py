@@ -197,7 +197,10 @@ def apply_overrides(items):
     Rule kinds, all scoped to a date:
       match   hide the whole stop
       strip   keep the stop, drop only the lines containing this text
-      rename  keep the stop, replace its whole activity text with "to"
+      rename  keep the stop and replace fields on it:
+                "to"       new activity text
+                "location" new address, which also moves the town and forecast
+                "link"     new link, or "" to drop one that no longer applies
     """
     path = os.path.join(ROOT, "scripts", "hidden_stops.json")
     try:
@@ -224,8 +227,22 @@ def apply_overrides(items):
             continue
 
         for rule in [r for r in rules if matches(r, item, "rename")]:
-            item["activity"] = rule["to"]
-            print(f"    renamed to: {rule['to']}")
+            if rule.get("to"):
+                item["activity"] = rule["to"]
+                print(f"    renamed to: {rule['to']}")
+
+            if "location" in rule:
+                loc = rule["location"].strip()
+                town, state = split_location(loc)
+                item["_location"] = loc
+                item["town"] = ", ".join(x for x in (town, state) if x)
+                # A new address can sit under a different forecast.
+                item["wx"] = loc_key_for(town, loc, item["activity"])
+                print(f"    moved to: {loc or '(no address)'}")
+
+            if "link" in rule:
+                item["link"] = rule["link"].strip()
+                print(f"    link: {item['link'] or '(cleared)'}")
 
         for rule in [r for r in rules if matches(r, item, "strip")]:
             needle = rule["strip"].strip().lower()

@@ -6,5 +6,13 @@
     "type": "Brunch",
     "location": "111 N Aurora St, Ithaca, NY 14850",
     "link": "https://www.yelp.com/biz/revelry-yards-no-title"
+  },
+  {
+    "date": "2026-08-15",
+    "time": "4:00 PM",
+    "activity": "Dryden Creamery 🍦",
+    "type": "Dessert",
+    "location": "62 W Main St, Dryden, NY 13053",
+    "link": "https://www.yelp.com/biz/dryden-creamery-dryden"
   }
 ]

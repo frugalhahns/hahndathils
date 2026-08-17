@@ -20,14 +20,30 @@
     "why": "dropped from Friday"
   },
   {
-    "date": "2026-08-14",
-    "strip": "Campus walk",
-    "why": "keep the dairy bar, drop the walk"
-  },
-  {
     "date": "2026-08-13",
     "rename": "Shipwreck Amusements",
     "to": "Shipwreck Amusements ⛳ + Ice Cream 🍦",
     "why": "one line instead of two, and it was not the Cornell dairy bar"
+  },
+  {
+    "date": "2026-08-14",
+    "rename": "Cornell Dairy Bar",
+    "to": "Cornell Dairy Bar 🍦 + Campus walk 🏫",
+    "why": "campus walk is back on"
+  },
+  {
+    "date": "2026-08-15",
+    "rename": "Paddle-N-More",
+    "to": "Paddle-N-More at Stewart Park 🛶",
+    "location": "Stewart Park, 1 James L Gibbs Dr, Ithaca, NY 14850",
+    "why": "moved from Myers Park"
+  },
+  {
+    "date": "2026-08-15",
+    "rename": "Salt Point Brewing",
+    "to": "South Hill Cider 🍏",
+    "location": "550 Sandbank Rd, Ithaca, NY 14850",
+    "link": "",
+    "why": "different place; the old Yelp link pointed at Salt Point"
   }
 ]
