@@ -26,9 +26,12 @@ const ALLOWED_ORIGINS = [
   "http://localhost:8000",
 ];
 
-/* Visits older than this are dropped on the next write. This is IP data, so it
-   expires rather than piling up in the account forever. */
-const RETAIN_DAYS = 90;
+/* Visits older than this are dropped on the next write. Three years is long
+   enough to keep several trips' worth of history; the point of the cutoff is
+   that this is IP data, not that the rows cost anything. Device labels live in
+   their own table and are never expired. */
+const RETAIN_DAYS = 1095;
+const RETAIN_LABEL = "3 years";
 const DASH_COOKIE = "hd_seen";
 
 function cors(origin) {
@@ -275,7 +278,8 @@ function dashPage(devices, visits) {
 <body><main>
   <h1>Who has looked at the trip site</h1>
   <p class="sub">One row per browser. Label a device once and the name sticks.
-     Visits older than ${RETAIN_DAYS} days are deleted automatically.</p>
+     Visits older than ${RETAIN_LABEL} are deleted automatically; the names you
+     assign are kept regardless.</p>
 
   <h2>Devices (${devices.length})</h2>
   <table><thead><tr>
