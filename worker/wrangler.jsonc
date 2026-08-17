@@ -10,8 +10,21 @@
     "REPO": "frugalhahns/hahndathils",
     "BRANCH": "main",
     "PHOTO_DIR": "photos"
-  }
+  },
+  // Private view log behind /seen and /seen/log. Create it once with
+  //   wrangler d1 create hahndathils-seen
+  // then paste the printed database_id below, and load the schema with
+  //   wrangler d1 execute hahndathils-seen --remote --file=schema.sql
+  "d1_databases": [
+    {
+      "binding": "SEEN",
+      "database_name": "hahndathils-seen",
+      "database_id": "PASTE_DATABASE_ID_HERE"
+    }
+  ]
   // Secrets, set with `wrangler secret put <NAME>`:
   //   GH_TOKEN         fine-grained PAT, Contents read+write, this repo only
   //   UPLOAD_TOKEN     must match CONFIG.uploadToken in assets/app.js
+  //   DASHBOARD_TOKEN  long random string; gates /seen/log. Never put this in
+  //                    the page source, unlike UPLOAD_TOKEN.
 }

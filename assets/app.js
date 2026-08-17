@@ -1071,6 +1071,42 @@ function wireTheme() {
   });
 }
 
+/* Tells the Worker this browser opened the site. The result is visible only to
+   the site owner at /seen/log; nothing about it is rendered here. The id is a
+   random string with no connection to anything else, so it identifies a
+   browser, not a person, until the owner labels it by hand. */
+const DEVICE_KEY = "hahndathils-device";
+
+function deviceId() {
+  try {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)).replace(/-/g, "");
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  } catch {
+    return ""; // private browsing blocks storage; skip rather than break
+  }
+}
+
+function reportVisit() {
+  if (!CONFIG.uploadUrl) return;
+  const id = deviceId();
+  if (!id) return;
+  // keepalive so the request survives the page being closed straight away.
+  fetch(CONFIG.uploadUrl.replace(/\/upload$/, "/seen"), {
+    method: "POST",
+    keepalive: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      token: CONFIG.uploadToken,
+      device: id,
+      ref: document.referrer || "",
+    }),
+  }).catch(() => {}); // never let this surface to the viewer
+}
+
 /* Caches the shell up front so the site opens in a gorge with no signal. */
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -1084,6 +1120,7 @@ function registerServiceWorker() {
 async function main() {
   wireTheme();
   registerServiceWorker();
+  reportVisit();
   initSparkles();
 
   const res = await fetch("data/site.json", { cache: "no-cache" });
