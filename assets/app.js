@@ -283,7 +283,7 @@ function renderAlbum() {
     if (day !== lastDay) {
       lastDay = day;
       host.append(el("h3", "album-day", day ? dayName(day) : "Undated"));
-      host.append(Object.assign(el("div", "album-grid"), { dataset: { day } }));
+      host.append(el("div", "album-grid"));
     }
 
     const img = el("img");
