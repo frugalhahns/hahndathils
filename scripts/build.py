@@ -194,9 +194,10 @@ def apply_overrides(items):
     substring of the activity, scoped to one date, because several activities
     span multiple lines.
 
-    A rule with "match" hides the whole stop. A rule with "strip" instead keeps
-    the stop and removes only the lines containing that text, which is how a
-    two-part activity like "Cornell Dairy Bar / + Campus walk" loses one half.
+    Rule kinds, all scoped to a date:
+      match   hide the whole stop
+      strip   keep the stop, drop only the lines containing this text
+      rename  keep the stop, replace its whole activity text with "to"
     """
     path = os.path.join(ROOT, "scripts", "hidden_stops.json")
     try:
@@ -222,6 +223,10 @@ def apply_overrides(items):
                   f"  ({hide.get('why', 'no reason given')})")
             continue
 
+        for rule in [r for r in rules if matches(r, item, "rename")]:
+            item["activity"] = rule["to"]
+            print(f"    renamed to: {rule['to']}")
+
         for rule in [r for r in rules if matches(r, item, "strip")]:
             needle = rule["strip"].strip().lower()
             lines = [l for l in item["activity"].splitlines()
@@ -229,11 +234,12 @@ def apply_overrides(items):
             if not lines:
                 continue  # never strip a stop down to nothing
             item["activity"] = "\n".join(lines).strip()
-            # The id is derived from the activity text, so it has to follow.
-            item["id"] = hashlib.sha1(
-                f"{item['date']}|{item['time']}|{item['activity']}".encode("utf-8")
-            ).hexdigest()[:10]
             print(f"    stripped {rule['strip']!r} from: {item['activity']}")
+
+        # The id derives from the activity text, so it follows any edit above.
+        item["id"] = hashlib.sha1(
+            f"{item['date']}|{item['time']}|{item['activity']}".encode("utf-8")
+        ).hexdigest()[:10]
 
         kept.append(item)
     return kept

@@ -23,5 +23,11 @@
     "date": "2026-08-14",
     "strip": "Campus walk",
     "why": "keep the dairy bar, drop the walk"
+  },
+  {
+    "date": "2026-08-13",
+    "rename": "Shipwreck Amusements",
+    "to": "Shipwreck Amusements ⛳ + Ice Cream 🍦",
+    "why": "one line instead of two, and it was not the Cornell dairy bar"
   }
 ]
