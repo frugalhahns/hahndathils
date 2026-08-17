@@ -201,6 +201,8 @@ def apply_overrides(items):
                 "to"       new activity text
                 "location" new address, which also moves the town and forecast
                 "link"     new link, or "" to drop one that no longer applies
+                "time"     new time, e.g. "9:00 AM"
+                "note"     short line shown under the stop
     """
     path = os.path.join(ROOT, "scripts", "hidden_stops.json")
     try:
@@ -243,6 +245,17 @@ def apply_overrides(items):
             if "link" in rule:
                 item["link"] = rule["link"].strip()
                 print(f"    link: {item['link'] or '(cleared)'}")
+
+            if rule.get("time"):
+                hhmm, label = parse_time(rule["time"])
+                # The list is sorted after overrides run, so a moved stop still
+                # lands in the right place in its day.
+                item["time"], item["timeLabel"] = hhmm, label
+                print(f"    time: {label}")
+
+            if "note" in rule:
+                item["hint"] = rule["note"].strip()
+                print(f"    note: {item['hint'] or '(cleared)'}")
 
         for rule in [r for r in rules if matches(r, item, "strip")]:
             needle = rule["strip"].strip().lower()

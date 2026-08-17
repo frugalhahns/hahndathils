@@ -45,5 +45,12 @@
     "location": "550 Sandbank Rd, Ithaca, NY 14850",
     "link": "",
     "why": "different place; the old Yelp link pointed at Salt Point"
+  },
+  {
+    "date": "2026-08-14",
+    "rename": "Buttermilk Falls",
+    "time": "9:00 AM",
+    "note": "Park at Buttermilk Field",
+    "why": "later start, and the main lot fills up"
   }
 ]

@@ -14,5 +14,12 @@
     "type": "Dessert",
     "location": "62 W Main St, Dryden, NY 13053",
     "link": "https://www.yelp.com/biz/dryden-creamery-dryden"
+  },
+  {
+    "date": "2026-08-15",
+    "time": "6:00 PM",
+    "activity": "Dinner @ Hope Lake 🍽️",
+    "type": "Dinner",
+    "location": "2245 Clute Rd, Cortland, NY 13045"
   }
 ]
