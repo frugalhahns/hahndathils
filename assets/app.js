@@ -230,14 +230,19 @@ function renderStop(stop, prev) {
 function setView(view) {
   const staying = view === "stay";
   const quoting = view === "quotes";
-  const trip = !staying && !quoting;
+  const album = view === "album";
+  const trip = !staying && !quoting && !album;
 
   $("#stay").hidden = !staying;
   $("#quotes").hidden = !quoting;
+  $("#album").hidden = !album;
   $("#days").hidden = !trip;
   $("#daynav").hidden = !trip;
   $("#itinerary-title").textContent =
-    staying ? "Where we're staying" : quoting ? "Things we said" : "Flexible itinerary";
+    staying ? "Where we're staying"
+      : quoting ? "Things we said"
+      : album ? `Every photo (${PHOTOS.length})`
+      : "Flexible itinerary";
 
   // The rest of the page is about the trip, so it only belongs on that view.
   ["#now", "#photos", "#forecast", "#ideas"].forEach((sel) => {
@@ -253,6 +258,42 @@ function setView(view) {
   });
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* Every photo at once, grouped by the day it was taken. The carousel is good
+   for a glance; this is for actually looking through them afterwards.
+
+   Indices match PHOTOS, so the lightbox and its prev/next work unchanged. */
+function renderAlbum() {
+  const host = $("#album");
+  host.innerHTML = "";
+  if (!PHOTOS.length) {
+    host.append(el("p", "muted", "No photos yet."));
+    return;
+  }
+
+  const names = SITE.photos || [];
+  let lastDay = null;
+
+  PHOTOS.forEach((src, i) => {
+    // photo-20260814-122242-xxxxxx.jpg
+    const stamp = (names[i] || "").match(/^photo-(\d{4})(\d{2})(\d{2})/);
+    const day = stamp ? `${stamp[1]}-${stamp[2]}-${stamp[3]}` : "";
+
+    if (day !== lastDay) {
+      lastDay = day;
+      host.append(el("h3", "album-day", day ? dayName(day) : "Undated"));
+      host.append(Object.assign(el("div", "album-grid"), { dataset: { day } }));
+    }
+
+    const img = el("img");
+    img.loading = i < 8 ? "eager" : "lazy";
+    img.decoding = "async";
+    img.src = src;
+    img.alt = names[i] || "";
+    img.onclick = () => openLightbox(i);
+    host.lastElementChild.append(img);
+  });
 }
 
 /* Funny things people said, newest first, grouped under whatever the person
@@ -605,6 +646,9 @@ function renderPhotos() {
     host.append(img);
   });
 
+  $("#ph-all").hidden = false;
+  $("#ph-all").onclick = () => setView("album");
+
   wireCarousel(host);
 }
 
@@ -920,10 +964,11 @@ function renderSite() {
   renderStay();
   renderQuotes();
   wireQuoteForm();
+  renderPhotos();   // populates PHOTOS, which the album and view bar both read
+  renderAlbum();
+  wireUpload();
   wireViewBar();
   startAutoRefresh();
-  renderPhotos();
-  wireUpload();
 
   $("#generated").textContent =
     "Updated " + new Date(SITE.generated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });

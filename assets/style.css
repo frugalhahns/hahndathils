@@ -518,6 +518,46 @@ a.stay-value { display: inline-block; }
 .is-trip .hero { padding: 22px 0 18px; }
 .is-trip .hero .unlock { margin-top: 10px; }
 
+/* ---------- full album ---------- */
+.btn-link {
+  background: none; border: 0; cursor: pointer;
+  color: var(--accent);
+  font: 600 .84rem/1 var(--font-label);
+  padding: 8px 4px;
+}
+.btn-link:hover { text-decoration: underline; }
+
+.album-day {
+  margin: var(--space-block) 0 12px;
+  font-size: .95rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.album-day:first-child { margin-top: 0; }
+
+.album-grid {
+  display: grid;
+  gap: 8px;
+  /* Denser than the carousel on purpose: this view is for scanning a lot of
+     photos at once, not for looking at one. */
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+}
+@media (min-width: 620px) {
+  .album-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+.album-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  transition: transform .12s ease;
+}
+.album-grid img:hover { transform: scale(1.03); }
+.album-grid img:active { transform: scale(.97); }
+
 /* ---------- quotes ---------- */
 .quote-form {
   background: var(--card);

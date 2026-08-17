@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#12161b">
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
-<link rel="stylesheet" href="assets/style.css?v=47cf60ff">
+<link rel="stylesheet" href="assets/style.css?v=5a6b3cbc">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -30,6 +30,8 @@
     <div id="days"></div>
     <div id="stay" hidden></div>
 
+    <div id="album" hidden></div>
+
     <div id="quotes" hidden>
       <form id="quote-form" class="quote-form">
         <textarea id="q-text" rows="2" maxlength="600" required
@@ -49,6 +51,7 @@
     <div class="section-head">
       <h2>Photos</h2>
       <button id="ph-add" class="btn btn-add">+ Add photos</button>
+      <button id="ph-all" class="btn-link" hidden>See all</button>
       <div id="ph-arrows" class="ph-arrows" hidden>
         <button id="ph-prev" aria-label="Previous photos">‹</button>
         <button id="ph-next" aria-label="More photos">›</button>
@@ -97,6 +100,7 @@
   <button data-view="trip" class="is-on" aria-pressed="true">Trip</button>
   <button data-view="stay" aria-pressed="false">🏠 Stay</button>
   <button data-view="quotes" aria-pressed="false">💬 Quotes</button>
+  <button data-view="album" aria-pressed="false">📷 Photos</button>
 </nav>
 
 <div id="lightbox" class="lightbox" hidden>
@@ -107,6 +111,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=5f90946a" type="module"></script>
+<script src="assets/app.js?v=943c1fb1" type="module"></script>
 </body>
 </html>
