@@ -1031,6 +1031,46 @@ function startAutoRefresh() {
   });
 }
 
+// ---------------------------------------------------------------- theme
+
+/* Follows the device by default, and remembers an explicit choice. Applied from
+   an inline script in the head as well, so the page never paints dark and then
+   flips to light. */
+const THEME_KEY = "theme";
+
+function applyTheme(mode) {
+  const light = mode === "light";
+  document.documentElement.classList.remove("light-pending");
+  document.body.classList.toggle("light", light);
+  const btn = $("#theme-toggle");
+  if (btn) {
+    btn.textContent = light ? "☀️" : "🌙";
+    btn.title = light ? "Switch to dark" : "Switch to light";
+  }
+  // Keeps the phone's status bar in step with the page.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", light ? "#f7f4ee" : "#12161b");
+}
+
+function currentTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === "light" || saved === "dark") return saved;
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function wireTheme() {
+  applyTheme(currentTheme());
+  $("#theme-toggle").onclick = () => {
+    const next = document.body.classList.contains("light") ? "dark" : "light";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  };
+  // Follow the system only while the viewer has not picked a side.
+  window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (!localStorage.getItem(THEME_KEY)) applyTheme(currentTheme());
+  });
+}
+
 /* Caches the shell up front so the site opens in a gorge with no signal. */
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
@@ -1042,6 +1082,7 @@ function registerServiceWorker() {
 }
 
 async function main() {
+  wireTheme();
   registerServiceWorker();
   initSparkles();
 

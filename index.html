@@ -6,10 +6,25 @@
 <meta name="theme-color" content="#12161b">
 <meta name="robots" content="noindex, nofollow">
 <title>Hahndathils Trip · Ithaca &amp; Cortland</title>
-<link rel="stylesheet" href="assets/style.css?v=5a6b3cbc">
+<link rel="stylesheet" href="assets/style.css?v=5e99917c">
+<script>
+  // Runs before first paint. app.js is a deferred module, so without this the
+  // page would paint dark and then flip to light a moment later.
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      var light = saved ? saved === "light"
+        : window.matchMedia("(prefers-color-scheme: light)").matches;
+      if (light) document.documentElement.classList.add("light-pending");
+    } catch (e) { /* private mode can throw on localStorage */ }
+  })();
+</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
+
+<button id="theme-toggle" class="theme-toggle" type="button"
+        aria-label="Switch between light and dark">🌙</button>
 
 <header class="hero">
   <div class="wrap">
@@ -111,6 +126,6 @@
   <div id="lb-count" class="lb-count"></div>
 </div>
 
-<script src="assets/app.js?v=042c6c43" type="module"></script>
+<script src="assets/app.js?v=295aac8d" type="module"></script>
 </body>
 </html>

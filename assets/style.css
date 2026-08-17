@@ -38,6 +38,12 @@
   --nav-bg: rgba(18, 22, 27, .92);
   --overlay: rgba(6, 8, 10, .94);
   --texture: none;
+  --error: #e0776a;
+  --accent-tint: rgba(95, 184, 166, .14);
+  --accent-tint-line: rgba(95, 184, 166, .35);
+  --bar-bg: rgba(22, 27, 33, .9);
+  --bar-line: rgba(255, 255, 255, .16);
+  --bar-shadow: 0 8px 28px rgba(0, 0, 0, .45);
 
   --font-body: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --font-display: var(--font-body);
@@ -59,6 +65,42 @@
   --space-block: 30px;    /* between blocks inside a section, e.g. days */
   --space-head: 18px;     /* under a section heading */
 }
+
+/* Light mode. Not an inversion: the accents are darkened so they still carry
+   enough contrast against a pale background, and the greys are warm rather than
+   blue so the cream and the script face sit together. */
+body.light,
+html.light-pending body {
+  --bg: #f7f4ee;
+  --bg-2: #efeae1;
+  --card: #fffdf9;
+  --line: #ddd5c8;
+  --ink: #1f2328;
+  --ink-2: #5e6672;
+  /* Darker than the dark-mode accents so links and times still clear WCAG AA
+     (4.5:1) against pale paper; the obvious lighter teal only reached 3.9. */
+  --accent: #1b7767;
+  --accent-2: #8f5514;
+  --rain: #2b6ca3;
+
+  --hero-bg:
+    radial-gradient(120% 90% at 15% 0%, #d8e6e6 0%, transparent 60%),
+    radial-gradient(100% 80% at 90% 10%, #e2dbe8 0%, transparent 55%),
+    var(--bg-2);
+  --nav-bg: rgba(247, 244, 238, .93);
+  --error: #b3261e;
+  --accent-tint: rgba(27, 119, 103, .12);
+  --accent-tint-line: rgba(27, 119, 103, .32);
+  --bar-bg: rgba(255, 253, 249, .94);
+  --bar-line: rgba(0, 0, 0, .14);
+  --bar-shadow: 0 6px 22px rgba(31, 41, 51, .18);
+
+  /* The lightbox stays dark in both modes, so its backdrop does not follow. */
+}
+
+/* The underline swash reads too pale over light paper. */
+body.light .hero h1::after,
+html.light-pending .hero h1::after { opacity: 1; }
 
 @media (max-width: 620px) {
   :root { --space-section: 40px; --space-block: 24px; }
@@ -97,7 +139,7 @@ h1 { font-size: clamp(2.1rem, 8vw, 3.2rem); }
 h2 { font-size: 1.25rem; }
 a { color: var(--accent); }
 .muted { color: var(--ink-2); font-size: .875rem; }
-.error { color: #e0776a; font-size: .85rem; }
+.error { color: var(--error); font-size: .85rem; }
 
 /* ---------- hero ---------- */
 .hero {
@@ -337,8 +379,8 @@ a { color: var(--accent); }
   font-size: .72rem; color: var(--accent);
   /* Plain rgba first: color-mix needs Chrome 111+, and some Android phones
      are behind that. The fallback is visually equivalent here. */
-  background: rgba(95, 184, 166, .14);
-  border: 1px solid rgba(95, 184, 166, .35);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-tint-line);
   border-radius: 999px;
   padding: 2px 9px; white-space: nowrap;
 }
@@ -356,7 +398,7 @@ a { color: var(--accent); }
   content: "›";
   display: grid; place-items: center;
   width: 24px; height: 24px; border-radius: 50%;
-  background: rgba(95, 184, 166, .16);
+  background: var(--accent-tint);
   font-size: 1.15rem; line-height: 1;
   transform: rotate(90deg);
   transition: transform .2s ease;
@@ -496,11 +538,11 @@ a.stay-value { display: inline-block; }
   left: 50%; transform: translateX(-50%);
   bottom: calc(14px + env(safe-area-inset-bottom));
   display: flex; gap: 4px; padding: 4px;
-  background: rgba(22, 27, 33, .9);
-  border: 1px solid rgba(255, 255, 255, .16);
+  background: var(--bar-bg);
+  border: 1px solid var(--bar-line);
   border-radius: 999px;
   backdrop-filter: blur(12px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  box-shadow: var(--bar-shadow);
 }
 .viewbar button {
   border: 0; background: none; cursor: pointer;
@@ -517,6 +559,26 @@ a.stay-value { display: inline-block; }
 /* ---------- compact header once the trip has started ---------- */
 .is-trip .hero { padding: 22px 0 18px; }
 .is-trip .hero .unlock { margin-top: 10px; }
+
+/* ---------- theme toggle ---------- */
+.theme-toggle {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  right: 14px;
+  z-index: 80;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  font-size: 1.05rem; line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  background: var(--bar-bg);
+  border: 1px solid var(--bar-line);
+  box-shadow: var(--bar-shadow);
+  backdrop-filter: blur(10px);
+  transition: transform .15s ease;
+}
+.theme-toggle:hover { transform: scale(1.08); }
+.theme-toggle:active { transform: scale(.94); }
 
 /* ---------- full album ---------- */
 .btn-link {
